@@ -65,18 +65,5 @@ namespace BeatAvatarBody
             if (component.gameObject.activeSelf != active) component.gameObject.SetActive(active);
         }
 
-        /// <summary>Describes what this component decided, for the probe and the log.</summary>
-        internal string Describe()
-        {
-            return "glasses=" + State(_glasses, _glasses != null ? _glasses.sharedMesh : null)
-                 + " facialHair=" + State(_facialHair, _facialHair != null ? _facialHair.sharedMesh : null)
-                 + " mouth=" + State(_mouth, _mouth != null ? _mouth.sprite : null);
-        }
-
-        private static string State(Component component, Object asset)
-        {
-            if (component == null) return "<field missing>";
-            return (asset == null ? "empty" : asset.name) + "/" + (component.gameObject.activeSelf ? "on" : "off");
-        }
     }
 }

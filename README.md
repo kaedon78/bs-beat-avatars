@@ -69,20 +69,10 @@ The install needs BSIPA applied (for `IPA.Loader.dll` in `Beat Saber_Data\Manage
 present (`Plugins\BSML.dll`). The build fails with a message saying which is missing rather than
 emitting a DLL against whatever happened to be lying around.
 
-## Diagnostics
-
-Setting `BSMU_AVATARPROBE=1` before launching turns on a probe that writes dumps into
-`Logs/probe/` — the avatar's renderer hierarchy, every camera's culling mask, the URP renderer's
-layer masks, the parts model, and a tracking heartbeat. It is off by default and does nothing
-unless asked for.
-
-`BSMU_AVATARPROBE_PREFABS=1` additionally surveys every `AvatarDisplayContext` prefab, and
-`BSMU_AVATARPROBE_PARTS=1` verifies the part-reveal pass against a synthetic avatar.
-
 ## Notes
 
 [NOTES.md](NOTES.md) records what had to be measured to make this work, including several things
-that are not obvious and cost a run each — the URP renderer's second layer filter, an interface
+that are not obvious — the URP renderer's second layer filter, an interface
 event the game never raises, and why a mirror image cannot be a rotation. Worth reading before
 changing anything.
 

@@ -57,16 +57,10 @@ namespace BeatAvatarBody
                 // never raise it. Taking both means one of them catches the edit whichever way the
                 // editor commits.
                 avatarDataModel.didSaveAvatarDataEvent += provider.HandleAvatarDataSaved;
-
-                // Identity, because subscribing to the wrong AvatarDataModel instance and
-                // subscribing to a dead event look identical from here: silence.
-                Plugin.Log.Info("AVBODY subscribed to AvatarDataModel#"
-                    + avatarDataModel.GetHashCode()
-                    + " (system holds #" + DescribeSystemModel(system) + ")");
             }
             else
             {
-                Plugin.Log.Warn("AVBODY no AvatarDataModel: live avatar edits will not update the body");
+                Plugin.Log.Warn("No AvatarDataModel: live avatar edits will not update the body.");
             }
 
             return provider;
@@ -99,18 +93,11 @@ namespace BeatAvatarBody
                 if (avatarData == null) return;
 
                 _data = Wrap(_system, avatarData.CreateMultiplayerAvatarsData());
-                Plugin.Log.Info("AVBODY avatar edited, updating body:"
-                    + " headTop=" + avatarData.headTopId
-                    + " glasses=" + avatarData.glassesId
-                    + " facialHair=" + avatarData.facialHairId
-                    + " hands=" + avatarData.handsId
-                    + " clothes=" + avatarData.clothesId);
-
                 visualDataDidChangeEvent?.Invoke(_data);
             }
             catch (Exception ex)
             {
-                Plugin.Log.Error("AVBODY visual refresh failed: " + ex);
+                Plugin.Log.Error("Visual refresh failed: " + ex);
             }
         }
 
@@ -123,33 +110,11 @@ namespace BeatAvatarBody
             try
             {
                 _data = await FetchAsync(_system);
-                Plugin.Log.Info("AVBODY avatar saved, updating body");
                 visualDataDidChangeEvent?.Invoke(_data);
             }
             catch (Exception ex)
             {
-                Plugin.Log.Error("AVBODY visual refresh failed: " + ex);
-            }
-        }
-
-        /// <summary>
-        /// The AvatarDataModel BeatAvatarSystem itself holds, for comparison with ours. Reflection
-        /// because the field is private, and this is diagnostic only.
-        /// </summary>
-        private static string DescribeSystemModel(IAvatarSystem system)
-        {
-            try
-            {
-                System.Reflection.FieldInfo field = system.GetType().GetField(
-                    "_avatarDataModel",
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-
-                object model = field?.GetValue(system);
-                return model == null ? "unknown" : model.GetHashCode().ToString();
-            }
-            catch (Exception)
-            {
-                return "unknown";
+                Plugin.Log.Error("Visual refresh failed: " + ex);
             }
         }
 
@@ -158,12 +123,11 @@ namespace BeatAvatarBody
             try
             {
                 _data = await FetchAsync(_system);
-                Plugin.Log.Info("AVBODY avatarDidChangeEvent fired (it never has before); updating body");
                 visualDataDidChangeEvent?.Invoke(_data);
             }
             catch (Exception ex)
             {
-                Plugin.Log.Error("AVBODY visual refresh failed: " + ex);
+                Plugin.Log.Error("Visual refresh failed: " + ex);
             }
         }
 

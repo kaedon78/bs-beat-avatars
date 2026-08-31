@@ -40,7 +40,7 @@ namespace BeatAvatarBody.UI
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.Error("AVBODY menu registration failed: " + ex);
+                    Plugin.Log.Error("Menu registration failed: " + ex);
                     yield break;
                 }
 
@@ -57,7 +57,6 @@ namespace BeatAvatarBody.UI
                 () => BeatSaberUI.MainFlowCoordinator.PresentFlowCoordinator(_flowCoordinator));
 
             MenuButtons.Instance.RegisterButton(_menuButton);
-            Plugin.Log.Info("AVBODY menu button registered");
         }
 
         private void OnDestroy()

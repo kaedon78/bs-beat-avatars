@@ -45,9 +45,6 @@ namespace BeatAvatarBody
         /// <summary>Extra hand rotation in degrees, in the anchor's local frame.</summary>
         internal Vector3 handRotationOffset;
 
-        internal Vector3 debugOffset;
-        internal float debugYaw;
-
         // Where an absent or untracked hand is parked, relative to the head. VRController has its
         // own kLeftControllerDefaultPosition for this but it is private, and reflecting a constant
         // is not worth it.
@@ -119,28 +116,15 @@ namespace BeatAvatarBody
         /// is still a fully drawn avatar. In fpfc the transition is fast enough that this never
         /// happened, so only a VR run could find it.
         /// </summary>
-        internal string EnsureRig()
+        internal void EnsureRig()
         {
-            string recovered = null;
-
             if (head == null)
             {
                 Camera camera = Camera.main;
-                if (camera != null)
-                {
-                    head = camera.transform;
-                    recovered = "head";
-                }
+                if (camera != null) head = camera.transform;
             }
 
-            if (leftHand == null || rightHand == null)
-            {
-                ResolveHands();
-                if (leftHand != null && rightHand != null)
-                    recovered = recovered == null ? "hands" : recovered + "+hands";
-            }
-
-            return recovered;
+            if (leftHand == null || rightHand == null) ResolveHands();
         }
 
         /// <summary>
@@ -193,14 +177,7 @@ namespace BeatAvatarBody
                 rotation = Quaternion.Inverse(space.rotation) * worldRotation;
             }
 
-            if (debugYaw != 0f)
-            {
-                Quaternion yaw = Quaternion.Euler(0f, debugYaw, 0f);
-                position = yaw * position;
-                rotation = yaw * rotation;
-            }
-
-            return new Pose(position + debugOffset, rotation);
+            return new Pose(position, rotation);
         }
     }
 }

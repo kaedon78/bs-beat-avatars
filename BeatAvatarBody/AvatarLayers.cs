@@ -98,17 +98,9 @@ namespace BeatAvatarBody
         /// camera-level check, which is why a mask that says the head should be drawn can sit
         /// alongside a third-person view that does not draw it.
         ///
-        /// The original values are captured on the first call so the probe can report what the base
-        /// game shipped rather than what we left behind -- the same contamination that made an
-        /// earlier mirror-mask reading wrong.
+        /// This is global state for the process lifetime, and idempotent: it only ever adds layers.
         /// </summary>
-        internal static bool RenderPipelineOriginalsCaptured { get; private set; }
-        internal static int OriginalOpaqueMask { get; private set; }
-        internal static int OriginalTransparentMask { get; private set; }
-        internal static int CurrentOpaqueMask { get; private set; }
-        internal static int CurrentTransparentMask { get; private set; }
-
-        internal static void EnsureRenderPipelineLayers(bool apply)
+        internal static void EnsureRenderPipelineLayers()
         {
             var asset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
             if (asset == null) return;
@@ -125,23 +117,10 @@ namespace BeatAvatarBody
 
                 int opaque = universal.opaqueLayerMask.value;
                 int transparent = universal.transparentLayerMask.value;
+                int wanted = kAlwaysVisibleMask | kOnlyInThirdPersonMask;
 
-                if (!RenderPipelineOriginalsCaptured)
-                {
-                    OriginalOpaqueMask = opaque;
-                    OriginalTransparentMask = transparent;
-                    RenderPipelineOriginalsCaptured = true;
-                }
-
-                if (apply)
-                {
-                    int wanted = kAlwaysVisibleMask | kOnlyInThirdPersonMask;
-                    if ((opaque & wanted) != wanted) universal.opaqueLayerMask = opaque | wanted;
-                    if ((transparent & wanted) != wanted) universal.transparentLayerMask = transparent | wanted;
-                }
-
-                CurrentOpaqueMask = universal.opaqueLayerMask.value;
-                CurrentTransparentMask = universal.transparentLayerMask.value;
+                if ((opaque & wanted) != wanted) universal.opaqueLayerMask = opaque | wanted;
+                if ((transparent & wanted) != wanted) universal.transparentLayerMask = transparent | wanted;
             }
         }
 

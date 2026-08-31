@@ -27,15 +27,6 @@ namespace BeatAvatarBody
         internal Transform SpawnedUnder { get; private set; }
         internal Transform PoseSpace { get; private set; }
 
-        /// <summary>The container the avatar prefab is injected with. Exposed for the probe.</summary>
-        internal DiContainer Container => _container;
-
-        /// <summary>Exposed for the probe's tracking heartbeat.</summary>
-        internal LocalPlayerPoseProvider PoseProvider => _poseProvider;
-
-        /// <summary>How the current player space was found, for the log.</summary>
-        internal static string PlayerSpaceSource { get; private set; } = "none";
-
         private DiContainer _container;
         private LocalAvatarVisualProvider _visualProvider;
         private LocalPlayerPoseProvider _poseProvider;
@@ -43,42 +34,21 @@ namespace BeatAvatarBody
         private PreviewAvatar _preview;
         private bool _spawning;
 
-        // Debug levers, off by default. BSMU_AVATARBODY_OFFSET moves the avatar away from your
-        // head so a flat fpfc capture can actually see it, and _YAW turns it around to face you.
-        // Neither belongs in normal use -- they exist because "is it spawning?" and "does it look
-        // right?" are different questions, and the first is answerable without a headset.
-        private Vector3 _debugOffset;
-        private float _debugYaw;
-
-        // BSMU_AVATARBODY_NOMASKS=1 leaves every camera and mirror mask untouched. It exists so
-        // the probe can read what the BASE GAME culls: this component rewrites those masks twice a
-        // second, so any dump taken after it starts is measuring us, not the game.
-        private bool _noMasks;
-
         internal BeatAvatarBodyConfig Config { get; private set; }
 
         private void Awake()
         {
             Instance = this;
             Config = BeatAvatarBodyConfig.Load();
-            _noMasks = Environment.GetEnvironmentVariable("BSMU_AVATARBODY_NOMASKS") == "1";
-            if (_noMasks) Plugin.Log.Warn("AVBODY camera/mirror mask writes DISABLED");
-            _debugOffset = ParseVector(Environment.GetEnvironmentVariable("BSMU_AVATARBODY_OFFSET"));
-            float.TryParse(Environment.GetEnvironmentVariable("BSMU_AVATARBODY_YAW"), out _debugYaw);
-
-            if (_debugOffset != Vector3.zero || _debugYaw != 0f)
-                Plugin.Log.Warn("AVBODY debug placement active offset=" + _debugOffset + " yaw=" + _debugYaw);
         }
 
         private IEnumerator Start()
         {
-            // AvatarSystemCollection is NOT in the project container. AvatarsAsyncInstaller is an
-            // AddressablesAsyncInstaller and the log shows it installed onto 'AppCoreSceneContext'
-            // (BGLib.AppFlow.Initialization.AsyncSceneContext) -- a SCENE context, a child of
-            // ProjectContext. Resolving from the project container therefore returns null forever,
-            // which is exactly what the first probe run did. Scan the contexts instead: a child
-            // container also resolves everything its parents bind, so whichever one answers is a
-            // container we can inject the avatar prefab with.
+            // AvatarSystemCollection is NOT in the project container: AvatarsAsyncInstaller binds
+            // it onto AppCoreSceneContext, a scene context and a child of ProjectContext, so
+            // resolving from the project container returns null forever. Scan the contexts instead;
+            // a child container resolves everything its parents bind, so whichever one answers is
+            // also a container the avatar prefab can be injected with.
             var waited = 0f;
             while (Collection == null)
             {
@@ -92,8 +62,6 @@ namespace BeatAvatarBody
 
                     _container = container;
                     Collection = collection;
-                    Plugin.Log.Info("AVBODY resolved AvatarSystemCollection from context '"
-                                    + context.name + "' (" + context.GetType().FullName + ")");
                     break;
                 }
 
@@ -102,26 +70,17 @@ namespace BeatAvatarBody
                 yield return new WaitForSeconds(0.5f);
                 waited += 0.5f;
 
-                // Never spin in silence: the first run of this probe waited forever and logged
-                // nothing, which reads as "the plugin did not load" rather than "the binding is
-                // somewhere else".
-                if (waited % 5f == 0f)
-                    Plugin.Log.Warn("AVBODY still waiting for AvatarSystemCollection after "
-                                    + waited + "s; contexts="
-                                    + FindObjectsByType<Context>(FindObjectsSortMode.None).Length);
+                // Never spin in silence. Waiting forever with no log reads as "the plugin did not
+                // load" rather than "the binding is somewhere else", and those need different fixes.
+                if (waited % 15f == 0f)
+                    Plugin.Log.Warn("Still waiting for the avatar system after " + waited + "s.");
             }
 
             while (AvatarSystem == null)
             {
                 AvatarSystem = Collection.GetAvatarSystem("BeatAvatarSystem");
-                if (AvatarSystem == null)
-                {
-                    Plugin.Log.Warn("AVBODY BeatAvatarSystem not registered yet");
-                    yield return new WaitForSeconds(0.5f);
-                }
+                if (AvatarSystem == null) yield return new WaitForSeconds(0.5f);
             }
-
-            Plugin.Log.Info("AVBODY resolved BeatAvatarSystem");
 
             while (true)
             {
@@ -145,37 +104,26 @@ namespace BeatAvatarBody
 
             // Re-resolve whatever the scene has since rebuilt. Cheap while everything is present:
             // EnsureRig only scans when something is actually missing.
-            if (_poseProvider != null)
-            {
-                string recovered = _poseProvider.EnsureRig();
-                if (recovered != null) Plugin.Log.Info("AVBODY rig recovered: " + recovered);
-            }
+            _poseProvider?.EnsureRig();
 
-            if (_noMasks) return;
-
-            // ONLY the HMD camera. An earlier version walked Camera.allCameras and forced the mask
-            // on every one of them, which is wrong twice over:
+            // ONLY the HMD camera. Never walk Camera.allCameras, for two reasons:
             //
-            //   * Camera2 already implements this exact convention and owns its cameras. Its
-            //     ApplyLayerBitmask adds layer 10 plus layer 3 to a Positionable camera and layer
-            //     10 plus layer 6 to a FirstPerson one, whenever that camera's Avatar visibility is
-            //     not Hidden. Forcing layer 3 on made every Camera2 first-person view show the
-            //     player's own head.
-            //   * Camera2's Cam2_WindowOwner camera exists to present the desktop window and
-            //     carries cullingMask = 0 deliberately -- its own comment records that a non-empty
-            //     mask stops it presenting at all. ORing a layer into that is a way to lose the
-            //     desktop window.
+            //   * Camera2 implements this same convention and owns its cameras -- ApplyLayerBitmask
+            //     gives a Positionable camera layer 3 and a FirstPerson one layer 6. Forcing layer 3
+            //     on makes every Camera2 first-person view show the player their own head.
+            //   * Camera2's Cam2_WindowOwner presents the desktop window and carries
+            //     cullingMask = 0 deliberately; a non-empty mask stops it presenting at all.
             //
-            // Everything else that wants the head asks for layer 3 itself. Scenes rebuild cameras,
-            // so this is re-applied rather than done once; it is idempotent.
+            // Anything else that wants the head asks for layer 3 itself. Scenes rebuild cameras, so
+            // this is re-applied rather than done once; all three calls are idempotent.
             Camera hmdCamera = Camera.main;
             if (hmdCamera != null) AvatarLayers.ApplyCameraMask(hmdCamera, true);
 
             AvatarLayers.AddToMirrorMask();
 
-            // URP filters layers again after the camera does, so a layer absent here renders on no
-            // camera at all -- see EnsureRenderPipelineLayers.
-            AvatarLayers.EnsureRenderPipelineLayers(true);
+            // URP filters layers again after the camera does, so a layer absent from the renderer's
+            // masks renders on no camera at all.
+            AvatarLayers.EnsureRenderPipelineLayers();
         }
 
         /// <summary>
@@ -186,21 +134,10 @@ namespace BeatAvatarBody
         private static Transform FindPlayerSpace()
         {
             VRCenterAdjust center = FindFirstObjectByType<VRCenterAdjust>();
-            if (center != null)
-            {
-                PlayerSpaceSource = "VRCenterAdjust";
-                return center.transform;
-            }
+            if (center != null) return center.transform;
 
             Camera camera = Camera.main;
-            if (camera != null && camera.transform.parent != null)
-            {
-                PlayerSpaceSource = "Camera.main.parent";
-                return camera.transform.parent;
-            }
-
-            PlayerSpaceSource = "none";
-            return null;
+            return camera != null ? camera.transform.parent : null;
         }
 
         private async void SpawnAsync(Transform space)
@@ -215,7 +152,7 @@ namespace BeatAvatarBody
 
                 if (avatar == null)
                 {
-                    Plugin.Log.Error("AVBODY InstantiateAvatar returned null");
+                    Plugin.Log.Error("InstantiateAvatar returned null");
                     return;
                 }
 
@@ -254,8 +191,6 @@ namespace BeatAvatarBody
                 poseProvider.useControllerOffsets = Config.useControllerOffsets;
                 poseProvider.handPositionOffset = BeatAvatarBodyConfig.Offset.ToVector3(Config.handPositionOffset);
                 poseProvider.handRotationOffset = BeatAvatarBodyConfig.Offset.ToVector3(Config.handRotationOffset);
-                poseProvider.debugOffset = _debugOffset;
-                poseProvider.debugYaw = _debugYaw;
                 poseProvider.ResolveHands();
                 poseProvider.Sample();
 
@@ -281,25 +216,16 @@ namespace BeatAvatarBody
                 CurrentAvatar = avatar;
                 SpawnedUnder = space;
 
-                Plugin.Log.Info("AVBODY spawned"
-                    + " scene=" + SceneManager.GetActiveScene().name
-                    + " spaceFrom=" + PlayerSpaceSource
-                    + " avatar=" + avatar.GetType().Name
-                    + " under=" + space.name
-                    + " headBone=" + (head == null ? "NOT FOUND" : head.name)
-                    + " poseSpace=" + PoseSpace.name
-                    + " handScale=" + Config.handScale
-                    + " gripOffset=" + poseProvider.handPositionOffset
-                    + " head=" + (poseProvider.head == null ? "NONE" : poseProvider.head.name)
-                    + " leftHand=" + Describe(poseProvider.leftHand, poseProvider.leftHandAnchor)
-                    + " rightHand=" + Describe(poseProvider.rightHand, poseProvider.rightHandAnchor)
-                    + " parts[" + (_partReveal == null ? "no visual controller" : _partReveal.Describe()) + "]");
-
-                AvatarSystemProbe.NotifySpawned(avatar);
+                // One line per scene, carrying what a bug report actually needs: whether the rig
+                // resolved. A frozen avatar and a working one look identical in a screenshot.
+                Plugin.Log.Info("Avatar spawned in " + SceneManager.GetActiveScene().name
+                    + " (head " + (poseProvider.head != null ? "ok" : "MISSING")
+                    + ", hands " + (poseProvider.leftHand != null ? "ok" : "MISSING")
+                    + "/" + (poseProvider.rightHand != null ? "ok" : "MISSING") + ")");
             }
             catch (Exception ex)
             {
-                Plugin.Log.Error("AVBODY spawn failed: " + ex);
+                Plugin.Log.Error("Avatar spawn failed: " + ex);
             }
             finally
             {
@@ -313,11 +239,6 @@ namespace BeatAvatarBody
 
             _partReveal.Apply();
             _preview?.ApplyReveal();
-
-            // Logged because "the id changed" and "the part is now on screen" are different
-            // claims, and the prefabs ship these objects switched off -- the reveal is the step
-            // between them, so it is the one worth seeing.
-            Plugin.Log.Info("AVBODY parts after edit: " + _partReveal.Describe());
         }
 
         private void Despawn()
@@ -398,11 +319,10 @@ namespace BeatAvatarBody
                     BeatAvatarBodyConfig.Offset.ToVector3(Config.previewPosition),
                     _visualProvider, Config);
 
-                Plugin.Log.Info("AVBODY preview shown");
             }
             catch (Exception ex)
             {
-                Plugin.Log.Error("AVBODY preview failed: " + ex);
+                Plugin.Log.Error("Preview failed: " + ex);
             }
         }
 
@@ -412,27 +332,7 @@ namespace BeatAvatarBody
 
             _preview.Dispose();
             _preview = null;
-            Plugin.Log.Info("AVBODY preview hidden");
         }
 
-        private static string Describe(VRController controller, Transform anchor)
-        {
-            if (controller == null) return "none";
-            return anchor == null ? "ok(no anchor)" : "ok(" + anchor.name + ")";
-        }
-
-        private static Vector3 ParseVector(string value)
-        {
-            if (string.IsNullOrEmpty(value)) return Vector3.zero;
-
-            string[] parts = value.Split(',');
-            if (parts.Length != 3) return Vector3.zero;
-
-            return float.TryParse(parts[0], out float x) &&
-                   float.TryParse(parts[1], out float y) &&
-                   float.TryParse(parts[2], out float z)
-                ? new Vector3(x, y, z)
-                : Vector3.zero;
-        }
     }
 }

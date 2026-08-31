@@ -130,27 +130,17 @@ namespace BeatAvatarBody
                 if (File.Exists(path))
                 {
                     var loaded = JsonConvert.DeserializeObject<BeatAvatarBodyConfig>(File.ReadAllText(path));
-                    if (loaded != null)
-                    {
-                        Plugin.Log.Info("AVBODY config loaded: handScale=" + loaded.handScale
-                            + " headScale=" + loaded.headScale
-                            + " bodyScale=" + loaded.bodyScale
-                            + " hideHead=" + loaded.hideHeadInFirstPerson
-                            + " handPositionOffset=" + (loaded.handPositionOffset == null
-                                ? "(null)" : loaded.handPositionOffset.ToString()));
-                        return loaded;
-                    }
+                    if (loaded != null) return loaded;
                 }
 
                 var defaults = new BeatAvatarBodyConfig();
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 File.WriteAllText(path, JsonConvert.SerializeObject(defaults, Formatting.Indented));
-                Plugin.Log.Info("AVBODY config written with defaults: " + path);
                 return defaults;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Error("AVBODY config load failed, using defaults: " + ex);
+                Plugin.Log.Error("Config load failed, using defaults: " + ex);
                 return new BeatAvatarBodyConfig();
             }
         }
@@ -169,11 +159,10 @@ namespace BeatAvatarBody
 
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
-                Plugin.Log.Info("AVBODY config saved");
             }
             catch (Exception ex)
             {
-                Plugin.Log.Error("AVBODY config save failed: " + ex);
+                Plugin.Log.Error("Config save failed: " + ex);
             }
         }
     }
