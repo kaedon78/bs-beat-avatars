@@ -61,7 +61,7 @@ also edit by hand.
 redistributable, so the build reads them out of an install you already have. Point it at one, in
 order of precedence:
 
-1. `dotnet build -c Release -p:BeatSaberDir="C:\Path\To\Beat Saber" BeatAvatarBody/BeatAvatarBody.csproj`
+1. `dotnet build -c Release -p:BeatSaberDir="C:\Path\To\Beat Saber" BeatAvatarBody.csproj`
 2. a `BEAT_SABER_DIR` environment variable
 3. a `beatsaberdir.txt` file at the repository root containing just the path (gitignored)
 
