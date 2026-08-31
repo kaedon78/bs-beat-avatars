@@ -1,0 +1,118 @@
+<bg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd">
+
+  <bg background="title-gradient" size-delta="90 8" anchor-min="0.5 1" anchor-max="0.5 1"
+      background-color="#FFF3" background-color0="#FFF0" background-color1="#FFFF" pivot="0.5 1">
+    <text text="Beat Avatar Body" anchor-min="0 0" anchor-max="1 1" size-delta="0 0"
+          font-size="6" italics="true" all-uppercase="true" align="Midline" />
+  </bg>
+
+  <settings-container size-delta-x="-20" anchored-position-x="4" size-delta-y="-12" anchored-position-y="-6">
+
+    <horizontal spacing="1">
+      <slider-setting text="Hand size" value="handScale" min="0.3" max="1.5" increment="0.05"
+                      bind-value="true" apply-on-change="true" pref-width="76"
+                      hover-hint="How big your hands look. Smaller usually feels more natural up close." />
+      <button text="undo" on-click="RevertHandScale" pref-width="14" interactable="~canUndoHandScale"
+              hover-hint="Puts this one setting back to what it was when you opened this panel. Greyed out when you have not changed it." />
+    </horizontal>
+
+    <horizontal spacing="1">
+      <slider-setting text="Head size" value="headScale" min="0.3" max="1.5" increment="0.05"
+                      bind-value="true" apply-on-change="true" pref-width="76"
+                      hover-hint="How big your head looks. You only ever see it in the mirror and on other cameras." />
+      <button text="undo" on-click="RevertHeadScale" pref-width="14" interactable="~canUndoHeadScale"
+              hover-hint="Puts this one setting back to what it was when you opened this panel. Greyed out when you have not changed it." />
+    </horizontal>
+
+    <horizontal spacing="1">
+      <slider-setting text="Body size" value="bodyScale" min="0.3" max="1.5" increment="0.05"
+                      bind-value="true" apply-on-change="true" pref-width="76"
+                      hover-hint="How big your torso looks." />
+      <button text="undo" on-click="RevertBodyScale" pref-width="14" interactable="~canUndoBodyScale"
+              hover-hint="Puts this one setting back to what it was when you opened this panel. Greyed out when you have not changed it." />
+    </horizontal>
+
+    <horizontal spacing="1">
+      <slider-setting text="Head height" value="headVerticalOffset" min="-0.3" max="0.3" increment="0.005"
+                      bind-value="true" apply-on-change="true" pref-width="76"
+                      hover-hint="Raises or lowers your head. Your body stays where it is." />
+      <button text="undo" on-click="RevertHeadVerticalOffset" pref-width="14" interactable="~canUndoHeadVerticalOffset"
+              hover-hint="Puts this one setting back to what it was when you opened this panel. Greyed out when you have not changed it." />
+    </horizontal>
+
+    <horizontal spacing="1">
+      <slider-setting text="Body height" value="bodyVerticalOffset" min="-0.3" max="0.3" increment="0.005"
+                      bind-value="true" apply-on-change="true" pref-width="76"
+                      hover-hint="Raises or lowers your torso." />
+      <button text="undo" on-click="RevertBodyVerticalOffset" pref-width="14" interactable="~canUndoBodyVerticalOffset"
+              hover-hint="Puts this one setting back to what it was when you opened this panel. Greyed out when you have not changed it." />
+    </horizontal>
+
+    <horizontal spacing="1">
+      <slider-setting text="Grip position" value="handOffsetZ" min="-0.2" max="0.2" increment="0.005"
+                      bind-value="true" apply-on-change="true" pref-width="76"
+                      hover-hint="Slides your hands along the controller until they sit where you are actually holding it." />
+      <button text="undo" on-click="RevertHandOffsetZ" pref-width="14" interactable="~canUndoHandOffsetZ"
+              hover-hint="Puts this one setting back to what it was when you opened this panel. Greyed out when you have not changed it." />
+    </horizontal>
+
+    <horizontal spacing="1">
+      <slider-setting text="Hand height" value="handOffsetY" min="-0.2" max="0.2" increment="0.005"
+                      bind-value="true" apply-on-change="true" pref-width="76"
+                      hover-hint="Nudges your hands up or down." />
+      <button text="undo" on-click="RevertHandOffsetY" pref-width="14" interactable="~canUndoHandOffsetY"
+              hover-hint="Puts this one setting back to what it was when you opened this panel. Greyed out when you have not changed it." />
+    </horizontal>
+
+    <horizontal spacing="1">
+      <slider-setting text="Hand sideways" value="handOffsetX" min="-0.2" max="0.2" increment="0.005"
+                      bind-value="true" apply-on-change="true" pref-width="76"
+                      hover-hint="Nudges your hands left or right." />
+      <button text="undo" on-click="RevertHandOffsetX" pref-width="14" interactable="~canUndoHandOffsetX"
+              hover-hint="Puts this one setting back to what it was when you opened this panel. Greyed out when you have not changed it." />
+    </horizontal>
+
+    <horizontal spacing="1">
+      <slider-setting text="Hand tilt" value="handRotationX" min="-90" max="90" increment="1"
+                      bind-value="true" apply-on-change="true" pref-width="76"
+                      hover-hint="Tilts your hands forward or back, like changing your wrist angle." />
+      <button text="undo" on-click="RevertHandRotationX" pref-width="14" interactable="~canUndoHandRotationX"
+              hover-hint="Puts this one setting back to what it was when you opened this panel. Greyed out when you have not changed it." />
+    </horizontal>
+
+    <horizontal spacing="1">
+      <slider-setting text="Hand turn" value="handRotationY" min="-90" max="90" increment="1"
+                      bind-value="true" apply-on-change="true" pref-width="76"
+                      hover-hint="Turns your hands left or right." />
+      <button text="undo" on-click="RevertHandRotationY" pref-width="14" interactable="~canUndoHandRotationY"
+              hover-hint="Puts this one setting back to what it was when you opened this panel. Greyed out when you have not changed it." />
+    </horizontal>
+
+    <horizontal spacing="1">
+      <slider-setting text="Hand twist" value="handRotationZ" min="-90" max="90" increment="1"
+                      bind-value="true" apply-on-change="true" pref-width="76"
+                      hover-hint="Twists your hands around the controller handle." />
+      <button text="undo" on-click="RevertHandRotationZ" pref-width="14" interactable="~canUndoHandRotationZ"
+              hover-hint="Puts this one setting back to what it was when you opened this panel. Greyed out when you have not changed it." />
+    </horizontal>
+
+    <checkbox-setting text="Match my grip" value="useControllerOffsets"
+                      bind-value="true" apply-on-change="true"
+                      hover-hint="Lines your hands up with the saber grip you set in the game's controller settings. Turn this off to use the controller's raw position instead." />
+
+    <checkbox-setting text="Hide my head" value="hideHeadInFirstPerson"
+                      bind-value="true" apply-on-change="true"
+                      hover-hint="Keeps your own head out of your view so it cannot block your sight. Applies the next time you change scene." />
+
+    <horizontal spacing="2" pad-top="2">
+      <button text="Undo all" on-click="RevertAllPressed" interactable="~canUndoAny"
+              hover-hint="Puts every setting back to what it was when you opened this panel. Greyed out when nothing has changed." />
+      <button text="Defaults" on-click="ResetPressed"
+              hover-hint="Starts over from the settings the mod ships with." />
+      <button text="Save" on-click="SavePressed"
+              hover-hint="Saves your settings now. You do not have to press this - they are saved automatically when you close this panel." />
+    </horizontal>
+
+  </settings-container>
+
+</bg>

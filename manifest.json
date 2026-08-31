@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/bsmg/BSIPA-MetadataFileSchemas/master/Schemas/BSIPA/plugin.schema.json",
+  "id": "BeatAvatarBody",
+  "name": "BeatAvatarBody",
+  "author": "BSModUpdater",
+  "version": "0.1.0",
+  "description": "First-person body presence using the base game's own Beat Avatar, instead of a custom model.",
+  "gameVersion": "1.45.0",
+  "dependsOn": {
+    "BSIPA": "^4.3.0"
+  }
+}
