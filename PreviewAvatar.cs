@@ -28,12 +28,21 @@ namespace BeatAvatarBody
     {
         private readonly GameObject _container;
         private readonly Avatar _avatar;
+        private readonly BeatAvatarPartReveal _reveal;
 
-        private PreviewAvatar(GameObject container, Avatar avatar)
+        private PreviewAvatar(GameObject container, Avatar avatar, BeatAvatarPartReveal reveal)
         {
             _container = container;
             _avatar = avatar;
+            _reveal = reveal;
         }
+
+        /// <summary>
+        /// Re-runs the part reveal. Needed because the parts the prefab ships switched off are
+        /// exactly the ones our own pickers change, so the mirror has to follow the edit as well
+        /// as the body does.
+        /// </summary>
+        internal void ApplyReveal() => _reveal?.Apply();
 
         internal static PreviewAvatar Create(
             Avatar avatar,
@@ -72,7 +81,7 @@ namespace BeatAvatarBody
                 reveal.Apply();
             }
 
-            return new PreviewAvatar(container, avatar);
+            return new PreviewAvatar(container, avatar, reveal);
         }
 
         internal void ApplyConfig(BeatAvatarBodyConfig config)

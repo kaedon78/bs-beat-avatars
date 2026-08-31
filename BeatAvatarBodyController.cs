@@ -309,7 +309,15 @@ namespace BeatAvatarBody
 
         private void HandleVisualDataChanged(MultiplayerAvatarsData data)
         {
-            if (_partReveal != null) _partReveal.Apply();
+            if (_partReveal == null) return;
+
+            _partReveal.Apply();
+            _preview?.ApplyReveal();
+
+            // Logged because "the id changed" and "the part is now on screen" are different
+            // claims, and the prefabs ship these objects switched off -- the reveal is the step
+            // between them, so it is the one worth seeing.
+            Plugin.Log.Info("AVBODY parts after edit: " + _partReveal.Describe());
         }
 
         private void Despawn()

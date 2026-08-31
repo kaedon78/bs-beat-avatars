@@ -46,10 +46,28 @@ namespace BeatAvatarBody
             var provider = new LocalAvatarVisualProvider(system, avatarDataModel, await FetchAsync(system));
 
             system.avatarDidChangeEvent += provider.HandleSystemAvatarDidChange;
+
             if (avatarDataModel != null)
+            {
                 avatarDataModel.didChangeAvatarDataEvent += provider.HandleAvatarDataChanged;
+
+                // Also the SAVE event. didChangeAvatarDataEvent comes off the avatarData setter,
+                // which only fires when the whole AvatarData object is replaced with a different
+                // one -- an editor that mutates its working copy in place and then saves would
+                // never raise it. Taking both means one of them catches the edit whichever way the
+                // editor commits.
+                avatarDataModel.didSaveAvatarDataEvent += provider.HandleAvatarDataSaved;
+
+                // Identity, because subscribing to the wrong AvatarDataModel instance and
+                // subscribing to a dead event look identical from here: silence.
+                Plugin.Log.Info("AVBODY subscribed to AvatarDataModel#"
+                    + avatarDataModel.GetHashCode()
+                    + " (system holds #" + DescribeSystemModel(system) + ")");
+            }
             else
+            {
                 Plugin.Log.Warn("AVBODY no AvatarDataModel: live avatar edits will not update the body");
+            }
 
             return provider;
         }
@@ -96,6 +114,45 @@ namespace BeatAvatarBody
             }
         }
 
+        /// <summary>
+        /// Reads the model back on save. Unlike the change event this carries no payload, so it
+        /// goes the long way round through the system.
+        /// </summary>
+        private async void HandleAvatarDataSaved()
+        {
+            try
+            {
+                _data = await FetchAsync(_system);
+                Plugin.Log.Info("AVBODY avatar saved, updating body");
+                visualDataDidChangeEvent?.Invoke(_data);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.Error("AVBODY visual refresh failed: " + ex);
+            }
+        }
+
+        /// <summary>
+        /// The AvatarDataModel BeatAvatarSystem itself holds, for comparison with ours. Reflection
+        /// because the field is private, and this is diagnostic only.
+        /// </summary>
+        private static string DescribeSystemModel(IAvatarSystem system)
+        {
+            try
+            {
+                System.Reflection.FieldInfo field = system.GetType().GetField(
+                    "_avatarDataModel",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+                object model = field?.GetValue(system);
+                return model == null ? "unknown" : model.GetHashCode().ToString();
+            }
+            catch (Exception)
+            {
+                return "unknown";
+            }
+        }
+
         private async void HandleSystemAvatarDidChange()
         {
             try
@@ -114,7 +171,10 @@ namespace BeatAvatarBody
         {
             _system.avatarDidChangeEvent -= HandleSystemAvatarDidChange;
             if (_avatarDataModel != null)
+            {
                 _avatarDataModel.didChangeAvatarDataEvent -= HandleAvatarDataChanged;
+                _avatarDataModel.didSaveAvatarDataEvent -= HandleAvatarDataSaved;
+            }
         }
     }
 }

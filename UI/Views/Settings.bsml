@@ -96,6 +96,7 @@
               hover-hint="Puts this one setting back to what it was when you opened this panel. Greyed out when you have not changed it." />
     </horizontal>
 
+
     <checkbox-setting text="Match my grip" value="useControllerOffsets"
                       bind-value="true" apply-on-change="true"
                       hover-hint="Lines your hands up with the saber grip you set in the game's controller settings. Turn this off to use the controller's raw position instead." />
