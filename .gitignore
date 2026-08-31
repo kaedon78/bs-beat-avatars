@@ -1,0 +1,6 @@
+bin/
+obj/
+# The path to a Beat Saber install. Machine-specific, and it is how the build finds the game
+# assemblies to reference. Never committed -- see the note about game binaries in the README.
+beatsaberdir.txt
+dist/

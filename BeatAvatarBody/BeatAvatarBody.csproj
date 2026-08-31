@@ -5,6 +5,14 @@
     <RootNamespace>BeatAvatarBody</RootNamespace>
   </PropertyGroup>
 
+  <!--
+    All references resolve out of a Beat Saber install (see Directory.Build.props); nothing here
+    is redistributable and none of it is committed. Private=false throughout: these assemblies
+    are supplied by the game at runtime and must not be copied next to the plugin.
+
+    Three directories, not one. BSIPA leaves IPA.Loader.dll in Managed\ beside the game's own
+    assemblies; the third-party libraries live in Libs\; and BSML is a mod, so it is in Plugins\.
+  -->
   <ItemGroup>
     <!-- BSIPA discovers plugin metadata from an embedded resource ending in manifest.json. -->
     <EmbeddedResource Include="manifest.json" />
@@ -14,7 +22,7 @@
 
   <ItemGroup>
     <Reference Include="IPA.Loader">
-      <HintPath>$(BSIPARefDir)IPA.Loader.dll</HintPath>
+      <HintPath>$(GameRefDir)IPA.Loader.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
@@ -22,111 +30,111 @@
          BeatAvatarSystem and the AvatarData converter; the SDK has AvatarData and the
          pose/visual controllers we reflect over to classify head parts. -->
     <Reference Include="BeatSaber.AvatarCore">
-      <HintPath>$(BSRefDir)BeatSaber.AvatarCore.dll</HintPath>
+      <HintPath>$(GameRefDir)BeatSaber.AvatarCore.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="BeatSaber.BeatAvatarAdapter">
-      <HintPath>$(BSRefDir)BeatSaber.BeatAvatarAdapter.dll</HintPath>
+      <HintPath>$(GameRefDir)BeatSaber.BeatAvatarAdapter.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="BeatSaber.BeatAvatarSDK">
-      <HintPath>$(BSRefDir)BeatSaber.BeatAvatarSDK.dll</HintPath>
+      <HintPath>$(GameRefDir)BeatSaber.BeatAvatarSDK.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <!-- MultiplayerAvatarData / MultiplayerAvatarsData / BitMask128. -->
     <Reference Include="GameplayCore">
-      <HintPath>$(BSRefDir)GameplayCore.dll</HintPath>
+      <HintPath>$(GameRefDir)GameplayCore.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <!-- VRController, for the hand poses. -->
     <Reference Include="HMLib">
-      <HintPath>$(BSRefDir)HMLib.dll</HintPath>
+      <HintPath>$(GameRefDir)HMLib.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <!-- VRCenterAdjust: the player-space transform the avatar is parented under. -->
     <Reference Include="Main">
-      <HintPath>$(BSRefDir)Main.dll</HintPath>
+      <HintPath>$(GameRefDir)Main.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <!-- MirrorRendererSO._reflectLayers is the lever for showing the avatar in mirrors. -->
     <Reference Include="Rendering">
-      <HintPath>$(BSRefDir)Rendering.dll</HintPath>
+      <HintPath>$(GameRefDir)Rendering.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <!-- PersistentScriptableObject, the base of MirrorRendererSO. -->
     <Reference Include="BGLib.UnityExtension">
-      <HintPath>$(BSRefDir)BGLib.UnityExtension.dll</HintPath>
+      <HintPath>$(GameRefDir)BGLib.UnityExtension.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <!-- Reading UserData\BeatAvatarBody.json. -->
     <!-- The tuning panel: BSML for the view, HMUI for FlowCoordinator/ViewController. -->
     <Reference Include="BSML">
-      <HintPath>$(BSModUpdaterRoot)build\modrefs\$(BSGameVersion)\BSML.dll</HintPath>
+      <HintPath>$(GamePluginsDir)BSML.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <!-- HMUI.FlowCoordinator and HMUI.ViewController live here, not in HMUI.dll. -->
     <Reference Include="BeatSaber.ViewSystem">
-      <HintPath>$(BSRefDir)BeatSaber.ViewSystem.dll</HintPath>
+      <HintPath>$(GameRefDir)BeatSaber.ViewSystem.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="HMUI">
-      <HintPath>$(BSRefDir)HMUI.dll</HintPath>
+      <HintPath>$(GameRefDir)HMUI.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="BGLib.Polyglot">
-      <HintPath>$(BSRefDir)BGLib.Polyglot.dll</HintPath>
+      <HintPath>$(GameRefDir)BGLib.Polyglot.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="VRUI">
-      <HintPath>$(BSRefDir)VRUI.dll</HintPath>
+      <HintPath>$(GameRefDir)VRUI.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <Reference Include="Newtonsoft.Json">
-      <HintPath>$(BSRefDir)Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(GameRefDir)Newtonsoft.Json.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <!-- UniversalRendererData.opaqueLayerMask: URP filters layers a second time, after the
          camera's culling mask. -->
     <Reference Include="Unity.RenderPipelines.Universal.Runtime">
-      <HintPath>$(BSRefDir)Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
+      <HintPath>$(GameRefDir)Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Core.Runtime">
-      <HintPath>$(BSRefDir)Unity.RenderPipelines.Core.Runtime.dll</HintPath>
+      <HintPath>$(GameRefDir)Unity.RenderPipelines.Core.Runtime.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <Reference Include="Zenject">
-      <HintPath>$(BSRefDir)Zenject.dll</HintPath>
+      <HintPath>$(GameRefDir)Zenject.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Zenject-usage">
-      <HintPath>$(BSRefDir)Zenject-usage.dll</HintPath>
+      <HintPath>$(GameRefDir)Zenject-usage.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <Reference Include="UnityEngine">
-      <HintPath>$(BSRefDir)UnityEngine.dll</HintPath>
+      <HintPath>$(GameRefDir)UnityEngine.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(BSRefDir)UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(GameRefDir)UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.XRModule">
-      <HintPath>$(BSRefDir)UnityEngine.XRModule.dll</HintPath>
+      <HintPath>$(GameRefDir)UnityEngine.XRModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.VRModule">
-      <HintPath>$(BSRefDir)UnityEngine.VRModule.dll</HintPath>
+      <HintPath>$(GameRefDir)UnityEngine.VRModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

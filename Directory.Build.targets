@@ -1,0 +1,19 @@
+<Project>
+
+  <!-- Imported after the project body, so $(TargetFramework) is resolved here. -->
+
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <!-- Builds net472 without Visual Studio; do not rely on a targeting pack being installed. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Target Name="CheckBeatSaberDir" BeforeTargets="BeforeBuild">
+    <Error Condition="'$(BeatSaberDir)' == ''"
+           Text="BeatSaberDir is not set. Pass -p:BeatSaberDir=&quot;C:\Path\To\Beat Saber&quot;, set BEAT_SABER_DIR, or write the path into beatsaberdir.txt. See Directory.Build.props." />
+    <Error Condition="!Exists('$(GameRefDir)')"
+           Text="No managed assemblies at '$(GameRefDir)'. BeatSaberDir ('$(BeatSaberDir)') does not look like a Beat Saber install." />
+    <Error Condition="!Exists('$(GameRefDir)IPA.Loader.dll')"
+           Text="'$(GameRefDir)' has no IPA.Loader.dll, so BSIPA is not installed in that copy of the game. Run IPA.exe there first." />
+  </Target>
+
+</Project>

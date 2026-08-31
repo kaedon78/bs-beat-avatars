@@ -1,0 +1,53 @@
+<Project>
+
+  <!--
+    Resolves the game assemblies this plugin references, from a Beat Saber install.
+
+    NO GAME BINARY IS EVER COMMITTED to this repository. Beat Saber's assemblies are not
+    redistributable, so the build reads them out of an install you already have. Point it at one
+    of three ways, in order of precedence:
+
+      1. -p:BeatSaberDir="C:\Path\To\Beat Saber"   on the command line
+      2. a BEAT_SABER_DIR environment variable
+      3. a beatsaberdir.txt file next to this one, containing just the path (gitignored)
+
+    If none is set the build fails with a message saying so, rather than emitting a DLL against
+    whatever happened to be lying around.
+
+    The install must have BSIPA applied AND BSML present: this plugin's settings panel is BSML,
+    and BSML ships as a plugin rather than as part of the game.
+  -->
+
+  <PropertyGroup>
+    <_RepoRoot>$(MSBuildThisFileDirectory)</_RepoRoot>
+
+    <BeatSaberDir Condition="'$(BeatSaberDir)' == ''">$(BEAT_SABER_DIR)</BeatSaberDir>
+    <BeatSaberDir Condition="'$(BeatSaberDir)' == '' And Exists('$(_RepoRoot)beatsaberdir.txt')">$([System.IO.File]::ReadAllText('$(_RepoRoot)beatsaberdir.txt').Trim())</BeatSaberDir>
+
+    <!--
+      Normalise into a SEPARATE property. Reassigning BeatSaberDir does not work when it came
+      from the command line: -p: sets a global property, which a normal assignment in a .props
+      file cannot override. Doing it that way silently left the path unterminated and produced
+      "C:\PathBeat Saber_Data\Managed\" - a wrong path that only showed up because the error
+      message printed it.
+    -->
+    <_BsDir Condition="'$(BeatSaberDir)' != ''">$(BeatSaberDir)</_BsDir>
+    <_BsDir Condition="'$(_BsDir)' != '' And !HasTrailingSlash('$(_BsDir)')">$(_BsDir)\</_BsDir>
+
+    <GameRefDir>$(_BsDir)Beat Saber_Data\Managed\</GameRefDir>
+    <GameLibsDir>$(_BsDir)Libs\</GameLibsDir>
+    <!-- BSML is a mod, not part of the game, so it lives with the other plugins. -->
+    <GamePluginsDir>$(_BsDir)Plugins\</GamePluginsDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework Condition="'$(TargetFramework)' == ''">net472</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <DebugType>portable</DebugType>
+    <!-- Game assemblies are strong-name-less and mismatched by design; do not fail on it. -->
+    <NoWarn>$(NoWarn);MSB3277;CS1701;CS1702</NoWarn>
+  </PropertyGroup>
+
+</Project>
