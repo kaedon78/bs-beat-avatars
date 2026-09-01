@@ -117,12 +117,6 @@ namespace BeatAvatars.UI
             set { if (Config != null) { Config.useControllerOffsets = value; Changed(nameof(canUndoAny)); } }
         }
 
-        protected bool hideHeadInFirstPerson
-        {
-            get => Config?.hideHeadInFirstPerson ?? true;
-            set { if (Config != null) Config.hideHeadInFirstPerson = value; }
-        }
-
         // Each undo button's interactable state. False means the setting is already what it was
         // when the panel opened, so the button would do nothing and should not invite a press.
         protected bool canUndoHandScale => Ready && Differs(Config.handScale, _openedWith.handScale);

@@ -46,7 +46,6 @@ appears in front of you while it is open, so every change is visible as you make
 | Hand height / sideways | Nudges the hands relative to the controller. |
 | Hand tilt / turn / twist | Rotates the hands, on top of your own grip settings. |
 | Match my grip | Follow the saber anchor, honouring your controller position and rotation settings. Off uses the controller's raw pose. |
-| Hide my head | Keeps your head out of your own view. Applies on the next scene change. |
 
 Each slider has an **undo** button that puts that one setting back to what it was when you opened
 the panel — greyed out until you change it. **Undo all** does the lot; **Defaults** starts over from

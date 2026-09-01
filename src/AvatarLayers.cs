@@ -38,7 +38,8 @@ namespace BeatAvatars
 
         /// <summary>
         /// Puts the avatar on the Avatar layer and, if asked, the head bone's whole subtree on the
-        /// third-person-only layer.
+        /// third-person-only layer. The player's own avatar always hides its head -- seeing it from
+        /// inside is never wanted -- while the tuning mirror passes false so it keeps one.
         ///
         /// The head comes from the pose controller's own _headTransform, not from renderer names:
         /// the SDK names five head part fields and the head mesh is not among them, so a

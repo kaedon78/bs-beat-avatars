@@ -98,10 +98,6 @@
                       bind-value="true" apply-on-change="true"
                       hover-hint="Line the hands up with the saber grip from your controller settings." />
 
-    <checkbox-setting text="Hide my head" value="hideHeadInFirstPerson"
-                      bind-value="true" apply-on-change="true"
-                      hover-hint="Keep your head out of your own view. Applies on the next scene." />
-
     <horizontal spacing="2" pad-top="2">
       <button text="Undo all" on-click="RevertAllPressed" interactable="~canUndoAny"
               hover-hint="Undo every change since you opened this panel." />

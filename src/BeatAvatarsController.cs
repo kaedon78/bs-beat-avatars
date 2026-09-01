@@ -333,7 +333,7 @@ namespace BeatAvatars
                 avatar.transform.localPosition = Vector3.zero;
                 avatar.transform.localRotation = Quaternion.identity;
 
-                Transform head = AvatarLayers.Apply(avatar, Config.hideHeadInFirstPerson);
+                Transform head = AvatarLayers.Apply(avatar, true);
 
                 // Sizing. The Beat Avatar is drawn for a multiplayer lobby, not for your own eyes.
                 BeatSaber.BeatAvatarSDK.BeatAvatarPoseController bones = AvatarBones.PoseController(avatar);

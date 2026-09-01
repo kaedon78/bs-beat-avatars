@@ -40,9 +40,6 @@ namespace BeatAvatars
         /// <summary>Raises or lowers the torso's visuals, in metres.</summary>
         public float bodyVerticalOffset = 0f;
 
-        /// <summary>Hide the head from the HMD camera. Off means you can see your own face.</summary>
-        public bool hideHeadInFirstPerson = true;
-
         /// <summary>
         /// Follow the saber anchor rather than the raw controller pose, so the avatar's hands
         /// honour the player's controller position and rotation settings. False reverts to the raw
@@ -109,7 +106,6 @@ namespace BeatAvatars
                 bodyScale = bodyScale,
                 headVerticalOffset = headVerticalOffset,
                 bodyVerticalOffset = bodyVerticalOffset,
-                hideHeadInFirstPerson = hideHeadInFirstPerson,
                 useControllerOffsets = useControllerOffsets,
                 handPositionOffset = Offset.Copy(handPositionOffset),
                 handRotationOffset = Offset.Copy(handRotationOffset),

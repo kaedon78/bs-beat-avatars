@@ -217,7 +217,6 @@ preview has to go. CustomAvatars reaches the same conclusion for the same reason
 | `handPositionOffset` | grip offset in the anchor's frame; `z` runs along the handle |
 | `handRotationOffset` | extra hand rotation in degrees, anchor frame |
 | `useControllerOffsets` | follow the saber anchor (true) or the raw controller pose |
-| `hideHeadInFirstPerson` | applies at spawn, so it needs a scene change |
 | `previewPosition` | mirror container offset; apparent mirror at half the `z` |
 
 Scales are set on the **bone**; vertical offsets on the bone's **visual child**. Neither can be the
@@ -240,7 +239,6 @@ settings apply, which is the case that produced the stale-container finding.
   arrangement that has collapsed labels before in this game's UI.
 * The **gameplay** hand anchor has never been named in a spawn line; all panel runs stayed in the
   menu. If it ever logs `ok(no anchor)`, the fallback is firing.
-* `hideHeadInFirstPerson` only takes effect on a scene change.
 * Custom avatar parts are unexplored. Eyes and mouths are `Sprite`s — loadable from PNG at runtime,
   no asset bundle, and mouths are currently empty so adding any would restore a missing feature.
   Head-tops, glasses, facial hair and clothes are `Mesh`es and would need an asset bundle plus the
