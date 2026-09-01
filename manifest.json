@@ -3,7 +3,7 @@
   "id": "BeatAvatars",
   "name": "BeatAvatars",
   "author": "Kaedon",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "First-person body presence using the game's own Beat Avatar, instead of a custom model.",
   "gameVersion": "1.45.0",
   "dependsOn": {
