@@ -1,16 +1,15 @@
-# BeatAvatars
+# Notes
 
-First-person body presence using the **base game's own Beat Avatar** instead of a custom model.
+What a maintainer needs to know about the game's avatar system, and the rules this mod follows
+because of it. Every entry here is something the code depends on and that reading the code alone
+will not tell you.
+
 Source in [src/](src/). Targets 1.45.0.
 
-Written from scratch rather than by porting CustomAvatars, which targets 1.41.1 and depends on
-FinalIK and DynamicBone. The Beat Avatar has no IK, no bones beyond four, no DynamicBone and no
-custom shaders, so almost all of that machinery is irrelevant here.
-
-## What the game gives you
+## The rig
 
 Three shipped assemblies do the work: `BeatSaber.AvatarCore`, `BeatSaber.BeatAvatarAdapter`,
-`BeatSaber.BeatAvatarSDK`. The public API is close to purpose-built for this:
+`BeatSaber.BeatAvatarSDK`.
 
 ```csharp
 Task<Avatar> IAvatarSystem.InstantiateAvatar(AvatarDisplayContext ctx, int levelOfDetail, DiContainer c)
@@ -19,196 +18,126 @@ void Avatar.SetVisualDataProvider(IAvatarVisualDataProvider)  // we supply this
 struct AvatarPoseData { Pose headPose, leftHandPose, rightHandPose; }
 ```
 
-`BeatAvatar.UpdateAvatarFromPose` forwards straight to
-`BeatAvatarPoseController.UpdateTransforms`, which writes **local** positions and rotations onto
-four bones — head, left hand, right hand, body — and derives the body from the head with a fixed
-neck offset. That is the entire rig.
+`BeatAvatar.UpdateAvatarFromPose` forwards to `BeatAvatarPoseController.UpdateTransforms`, which
+writes **local** positions and rotations onto four bones — head, left hand, right hand, body — and
+derives the body from the head with a fixed neck offset. That is the entire rig: no IK, no
+skeleton, no skinning. It is why this mod needs neither FinalIK nor DynamicBone.
 
-## Facts established by measurement
+## Never cache a Zenject container
 
-Each of these cost a run, and several contradicted a reasonable-looking assumption.
+The most expensive lesson here, and it caused three separate bugs.
 
-### The bindings are on a scene context, not the project context
+`AvatarsAsyncInstaller` binds `AvatarSystemCollection` onto **`AppCoreSceneContext`**, a child of
+`ProjectContext` — so resolving from `ProjectContext.Instance.Container` returns null forever. Scan
+`Zenject.Context` components and take whichever container answers; a child resolves everything its
+parents bind.
 
-`AvatarsAsyncInstaller` binds `AvatarSystemCollection` onto **`AppCoreSceneContext`**
-(`BGLib.AppFlow.Initialization.AsyncSceneContext`), a child of `ProjectContext`. Resolving from
-`ProjectContext.Instance.Container` returns null forever. The first probe run spun silently for its
-whole duration because of this — hence the "never wait in silence" logging in the controller.
+Having found it, **do not keep it**. Applying anything in the game's own Settings rebuilds that
+context, and a dead container *still resolves*. It does not throw, return null, or complain: it
+hands back an `AvatarPartsModel` built from destroyed ScriptableObjects, whose arrays keep their
+lengths so every count looks right, while every `id` reads null and every mesh lands null.
 
-Scan `Zenject.Context` components instead and take whichever container answers; a child container
-resolves everything its parents bind.
+The symptom is an avatar that spawns, tracks perfectly, sits on the correct layers, is active and
+unscaled — and wears nothing. Only the head remains, because that mesh is baked into the prefab
+while head-top, clothes and hands come from `AvatarData`. From inside you see almost nothing, since
+the head is culled from your view; in a mirror you see a bare head.
 
-### A stale container still resolves, and hands back wreckage
+Two more failures share the shape — something captured once from a container and never revisited:
 
-The sequel to the above, and the most expensive thing in this file.
+* the **menu button**, because BSML binds `MenuButtons` into the *menu* container, which is rebuilt
+  whenever settings are applied, leaving a fresh instance with an empty button list;
+* the **flow coordinator**, because `BeatSaberUI.CreateFlowCoordinator` puts it on a plain
+  GameObject in the current scene, so it dies with that scene.
 
-Having found the right container, the mod cached it. Applying anything in the game's own Settings
-rebuilds `AppCoreSceneContext` — and **a dead container still resolves**. It does not throw, does
-not return null, and does not complain. It hands back an `AvatarPartsModel` built from destroyed
-ScriptableObjects: the arrays keep their lengths, so every count looks right; every `id` reads
-null, so every lookup misses; every mesh lands null.
+Each is patched separately. Taking a SiraUtil dependency — `Zenjector.Install(Location.App, …)` —
+would make the whole class impossible and delete the context scan, the retry burst and the
+`Instance` static with it.
 
-The result is an avatar that spawns, tracks the player perfectly, sits on the correct layers, is
-active and unscaled — and wears nothing. Only the head is left, because that one mesh is baked into
-the prefab while head-top, clothes and hands all come from `AvatarData`. From inside you see almost
-nothing, since the head is culled from your own view; in the mirror, which reflects both layers, you
-see a bare head.
+## URP filters layers twice
 
-**Re-resolve the container on every spawn.** `SpawnAsync` does, and takes the collection and avatar
-system with it.
+A camera's culling mask is not the only filter. The `ScriptableRenderer` ANDs its own
+`opaqueLayerMask` and `transparentLayerMask` on top, so a layer missing from those renders on **no
+camera**, however that camera is configured — and no camera-level check can see it.
 
-Four hypotheses died before this one, each killed by measurement rather than argument, and the
-eliminations are what made it findable:
+1.45.0 omits layer 3 from both, which is the layer CustomAvatars and Camera2 use for
+"third person only". Full write-up in [migrations/urp-layer-masks.md](migrations/urp-layer-masks.md).
 
-| suspected | how it died |
-|---|---|
-| camera / mirror / URP layer masks | byte-identical before and after the apply |
-| a layer-reset detector | blind exactly here: the apply respawns the avatar, and it treated the first pass after a spawn as set-up |
-| the avatar instance | seven reloads, every one empty |
-| released assets | the collections were full; it was the ids that were gone |
+Body and hands go on layer 10 ("Avatar"), the head bone's subtree on layer 3. Touch the HMD
+camera's mask and nothing else: Camera2 owns its cameras and implements the same convention, and
+its `Cam2_WindowOwner` carries an empty mask deliberately.
 
-Two operator observations did more than any of that: **"only the head stays"** pointed at meshes
-rather than layers, and **"in the mirror, not my own view"** unified two symptoms that looked like
-separate faults.
+## The avatar prefabs
 
-### Container lifetime is the recurring bug in this mod
+* Six `AvatarDisplayContext` values reach **three** prefabs — `BeatAvatar`, `BeatAvatarResults`,
+  `BeatAvatarHologram` — with **identical hierarchies**. Any difference is materials or scale.
+  Choosing a different display context buys nothing.
+* They ship on **layer 0**, not layer 10. The layer assignment is entirely this mod's doing.
+* The head mesh is **not** one of the five named head-part fields (head top, glasses, facial hair,
+  eyes, mouth). Classify head geometry by the head **bone's subtree**, not field by field, or a
+  bare face is left floating in the player's view.
 
-Three separate failures, one shape — something captured once from a Zenject container and never
-revisited:
+## Retired avatar parts
 
-* the **menu button**, lost because BSML binds `MenuButtons` into the menu container, which is
-  rebuilt whenever settings are applied;
-* the **flow coordinator**, destroyed with the scene it was created in;
-* the **avatar's container**, above.
+Glasses, facial hair and mouth are inactive in every prefab. `UpdateAvatarVisual` fills their mesh
+or sprite anyway and never activates them, and nothing in `BeatSaber.BeatAvatarSDK` calls
+`SetActive` — so they are populated and permanently invisible.
 
-Each is patched individually and each patch is small, but the pattern is the argument for taking a
-SiraUtil dependency: `Zenjector.Install(Location.App, ...)` would make the whole class impossible
-and delete the context scanning, the retry burst and the `Instance` static along with it.
+They are also unreachable. `BeatAvatarEditorViewController` sets up exactly four value pickers —
+head top, hands, clothes, eyes — and the `AvatarPart` enum keeps `GlassesColor` and
+`FacialHairColor` while having lost the matching `…Model` entries. A retired feature with its art,
+data and serialisation left in place.
 
-### The prefabs ship on layer 0, and there are only three of them
+`BeatAvatarPartReveal` activates whatever the visual update actually filled. It costs nothing while
+the ids are `None`, handles a save that already carries one, and would start working by itself if a
+later version restored the editor UI. Pickers for glasses and facial hair were built and removed;
+the meshes render correctly but are not good enough to want.
 
-Six `AvatarDisplayContext` values reach three distinct prefabs — `BeatAvatar` (Unknown, UI,
-MultiplayerLobby, MultiplayerGameplay), `BeatAvatarResults`, `BeatAvatarHologram` — and all three
-have **identical hierarchies**, on **layer 0 (Default)**, not layer 10. Any difference between them
-is materials or scale, not structure. Picking a different display context buys nothing.
+Mouth cannot be revived at all: **all twelve entries have a null sprite**.
 
-### The head mesh is not one of the named part fields
+Part lookups themselves are sound. An eyes id of `Eyes11` resolving to a sprite named `Eyes4` is
+just asset naming — ids and asset names do not correspond.
 
-`BeatAvatarVisualController` names five head parts (head top, glasses, facial hair, eyes, mouth).
-The head itself is not among them. Classifying head geometry field-by-field leaves a bare face
-floating in your view; take the head **bone's whole subtree** instead, which is head by
-construction.
+## `IAvatarSystem.avatarDidChangeEvent` is dead
 
-### Mouth, glasses and facial hair are shipped switched off
+The obvious hook for "the player edited their avatar". Its only raiser is `protected` and has **no
+caller in any of the 255 game assemblies**. Subscribing compiles, runs, and silently never fires.
 
-Inactive in the prefab, before any visual data. `UpdateAvatarVisual` assigns their mesh or sprite
-anyway and never activates them, and there is **no `SetActive` call anywhere in
-`BeatSaber.BeatAvatarSDK`** — so nothing the game does could make them render.
+The live signal is `AvatarDataModel.didChangeAvatarDataEvent`, which the game's own editor listens
+to. The new `AvatarData` arrives with the event, so the body can update before the edit is saved.
+Take `didSaveAvatarDataEvent` as well: the change event comes off the `avatarData` **setter**, so an
+editor that mutates its copy in place and saves would never raise it.
 
-`BeatAvatarPartReveal` activates them when the visual update actually put something in them, and
-that was verified against a synthetic `AvatarData` carrying `Glasses01` and `Beard01`: both objects
-go from populated-and-inactive to active with their meshes.
+Writing avatar data has the same trap in reverse — **clone, modify, assign**. Mutating the held
+object changes the avatar and tells nobody.
 
-**But no player can reach it, because the game's avatar editor cannot select those parts.**
-`BeatAvatarEditorViewController` sets up exactly four value pickers — head top, hands, clothes,
-eyes — and glasses and facial hair appear nowhere else in the whole adapter except the network
-serialiser. The `AvatarPart` enum tells the same story from the other side: it has `HeadTopModel`,
-`HandsModel` and `ClothesModel`, and for glasses and facial hair only `GlassesColor` and
-`FacialHairColor` — the *model* entries were removed while the colour ones were left behind.
+## Poses
 
-So glasses and facial hair are a retired feature: meshes still shipped (2 glasses, 3 facial hair),
-data still serialised, editor gone, prefab objects disabled. The reveal only has an effect for a
-save that already carries a non-`None` id — an older save, a hand-edited one, or a mod that sets it.
+* They must be **local to the bone's own parent**. World poses work only while that parent sits at
+  the origin unrotated, and break the moment the room offset or a 360 map turns it.
+* Follow the **saber anchor**, not the controller. `VRController.Update` writes the raw tracked node
+  pose onto its own transform, and `position`/`rotation` return that; the player's grip settings are
+  applied to `_viewAnchorTransform`, a child, which is what the saber is mounted on.
+* **Re-resolve the rig continuously.** A scene can be rebuilt around the avatar, and at the instant
+  it respawns `Camera.main` and the controllers may not exist. A rig resolved once stays broken, and
+  a frozen avatar is still a fully drawn avatar, so it reads as a rendering fault.
 
-**Pickers for both were built, tried, and removed.** They worked: the settings panel offered the
-retired parts, writing them through `AvatarDataModel.avatarData` reached the body and the mirror
-live, and the operator confirmed in VR that glasses and facial hair render correctly on the head.
-They were dropped because the *models themselves* are not good enough to want — which is a fair
-guess at why the game retired them. Removed in a single commit and easy to restore from history if
-a later version improves the art.
+## fpfc and VR disagree
 
-Two things that had to be right, and are worth knowing if it is ever revived:
+Flat mode is not a substitute for one headset run. The menu's `VRController` components are
+`enabled=false` with `mouseMode=true` under fpfc and enabled under VR, so an `isActiveAndEnabled`
+check silently rejects both hands in flat runs only. Scene transitions are also faster in fpfc,
+which hides races that VR reproduces every time.
 
-* **Clone, modify, assign — never mutate in place.** `AvatarDataModel.avatarData`'s setter is what
-  calls `ReportAvatarChanged`, and it only fires when the object it is given differs from the one
-  it holds. Editing the held object changes the avatar and tells nobody.
-* The **preview** has its own `BeatAvatarPartReveal`, so refreshing only the body's leaves the part
-  missing from the mirror — the very mirror being used to look at it.
+## Scale on the bone, offsets on its child
 
-`BeatAvatarPartReveal` itself is kept. It costs nothing when the ids are `None`, it is what makes a
-save that already carries one render correctly, and it would start working on its own if a later
-version restored the editor UI.
+The pose controller rewrites each bone's local position every frame, so a position set there is
+gone by the next pose event. A bone's own **scale** is unaffected by that, and its **child** is
+never touched.
 
-Mouth is further gone still: **all twelve entries have a null sprite**, so there is no art to
-reveal even if something did select them.
+So: scales go on the bone, vertical offsets on the bone's visual child. Using the child for the head
+also keeps it independent of the body, which `UpdateBodyPosition` derives from the head *bone*.
 
-Part lookups themselves are fine — all seven collections report `HIT`. An eyes id of `Eyes11`
-resolving to a sprite asset named `Eyes4` is just asset naming; ids and asset names do not
-correspond.
-
-### `IAvatarSystem.avatarDidChangeEvent` is dead
-
-The obvious hook for "the player edited their avatar". Its only raiser is
-`AvatarSystem.RaiseAvatarDidChangeEvent`, which is `protected` and has **no caller in any of the
-255 game assemblies** — the string occurs in `BeatSaber.AvatarCore.dll`, where it is defined, and
-nowhere else. Subscribing compiles, runs, and silently never fires.
-
-The live signal is `AvatarDataModel.didChangeAvatarDataEvent`, raised by `ReportAvatarChanged` from
-the `avatarData` setter, which is what the game's own avatar editor listens to. The new
-`AvatarData` arrives with the event, so the body updates from an edit **before it is saved to
-disk**. Verified firing in VR.
-
-### The controller transform is not where your hands are
-
-`VRController.Update` writes the **raw tracked node pose** onto its own transform, and
-`VRController.position`/`rotation` return exactly that. The player's controller position and
-rotation settings are applied by `TryGetControllerOffset` onto **`_viewAnchorTransform`**, a child —
-which is what the saber is mounted on.
-
-Follow the anchor, or the avatar's hands sit at a subtly different angle from the saber the player
-is actually holding. Logged per spawn as `leftHand=ok(MenuHandle)` so a silent fallback is visible.
-
-### Resolve the rig continuously, not once
-
-Dismissing the health warning reloads the menu scene. The avatar respawns into a half-built scene
-where `Camera.main` and the `MenuControllers` do not exist yet, and a rig resolved once at spawn
-stays broken for the session — the avatar freezes with both hands at their fallback rest pose.
-**In fpfc the transition is fast enough that this never happens**, so only a VR run could find it.
-
-Guarded two ways: do not spawn while `Camera.main` is null, and re-resolve anything that goes
-missing.
-
-### A mirror image cannot be a rotation
-
-The tuning preview is a second avatar reflected by a container with **negative Z scale**, fed the
-player's poses completely unchanged (CustomAvatars' "fake mirror").
-
-The first attempt mirrored the poses instead — reflecting each position and rebuilding each
-rotation from a reflected forward and up. The body looked right and the hands did not, and that
-split is the diagnosis: the body's orientation is yaw-only, derived from the head, so almost any
-plausible mirror gets it right. The hands carry full 3D orientation **and chirality**, and a
-reflection is orientation-reversing — a mirrored right hand is a *left* hand, which no rotation can
-express. A negative scale can, because it is an actual reflection.
-
-With the container at distance *d*, a bone at local *z* lands at *d − z*: the apparent mirror
-surface is at **half** the container distance.
-
-## Layers
-
-See [migrations/urp-layer-masks.md](migrations/urp-layer-masks.md) — the URP renderer applies its
-own layer masks after the camera's, and layer 3 was missing from them. That is why the head
-rendered nowhere despite every camera mask being correct.
-
-Body and hands go on layer 10 ("Avatar"), the head bone's subtree on layer 3 ("third person only"),
-matching the CustomAvatars/Camera2 convention. We touch the HMD camera's mask and nothing else.
-
-## Settings
-
-A dedicated **"Beat Avatars"** menu button opening its own `FlowCoordinator`, not a Mod Settings
-tab. Mod Settings is a narrow modal that fills the space in front of the player, which is where the
-preview has to go. CustomAvatars reaches the same conclusion for the same reason.
-
-`UserData/BeatAvatars.json`, also editable by hand:
+`UserData/BeatAvatars.json`:
 
 | key | meaning |
 |---|---|
@@ -219,27 +148,13 @@ preview has to go. CustomAvatars reaches the same conclusion for the same reason
 | `useControllerOffsets` | follow the saber anchor (true) or the raw controller pose |
 | `previewPosition` | mirror container offset; apparent mirror at half the `z` |
 
-Scales are set on the **bone**; vertical offsets on the bone's **visual child**. Neither can be the
-other way round: the pose controller rewrites each bone's local position every frame, so a position
-set there is gone by the next pose event, while the child is never touched. Using the child for the
-head also decouples it from the body, which `UpdateBodyPosition` derives from the head *bone*.
+## Open work
 
-## Verified in VR by the operator
-
-No own head from inside; scale correct; Camera2 third-person view shows the head; 360° maps show
-correct views; gameplay pose tracking through a full song; mirror hands correct; settings panel
-functional, including both vertical sliders; the avatar keeps its clothes and hands across a
-settings apply, which is the case that produced the stale-container finding.
-
-## Not yet done
-
-* Take the SiraUtil dependency and delete the three container workarounds, as above. The single
-  largest cleanup available.
-* Layout of the per-slider undo column is unconfirmed — a slider and a button side by side is an
-  arrangement that has collapsed labels before in this game's UI.
-* The **gameplay** hand anchor has never been named in a spawn line; all panel runs stayed in the
-  menu. If it ever logs `ok(no anchor)`, the fallback is firing.
-* Custom avatar parts are unexplored. Eyes and mouths are `Sprite`s — loadable from PNG at runtime,
-  no asset bundle, and mouths are currently empty so adding any would restore a missing feature.
-  Head-tops, glasses, facial hair and clothes are `Mesh`es and would need an asset bundle plus the
-  avatar's UV conventions, since `MulticolorAvatarPartPropertyBlockSetter` tints by UV segment.
+* **Take the SiraUtil dependency** and delete the three container workarounds. The largest cleanup
+  available, and it removes a class of bug rather than another instance of it.
+* The **gameplay** hand anchor has never appeared in a spawn line; every panel session so far stayed
+  in the menu. `ok(no anchor)` in the log means a fallback pose is in use.
+* Custom avatar parts are unexplored. Eyes and mouths are `Sprite`s, loadable from PNG at runtime
+  with no asset bundle, and the mouth collection is empty so anything added would restore a missing
+  feature. Meshes would need an asset bundle plus the avatar's UV conventions, since
+  `MulticolorAvatarPartPropertyBlockSetter` tints by UV segment.

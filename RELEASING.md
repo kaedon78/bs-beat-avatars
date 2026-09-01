@@ -53,6 +53,34 @@ Do not renumber a fork to fit this convention.
 5. Download the published asset and hash it against the local build. Replacing an asset is exactly
    the step that can silently leave the old file in place.
 
+## README structure
+
+The same skeleton in each mod, so a reader who knows one knows the others:
+
+1. **Title**, one-line description, supported game version
+2. *(mod-specific explanation, where the mod needs one)*
+3. **Requirements** -- game version, BSIPA, any mod dependencies
+4. **Installing** -- where the DLL goes
+5. **Settings**, and any mod-specific usage sections
+6. **Known limits** -- *optional.* Only what the mod's own logic cannot do. Omit the section
+   entirely when there is nothing of that kind; limitations of the game itself are not the mod's
+   known limits
+7. **Building** -- always states that no game binary is committed and why
+8. **Releasing** -- links this file
+9. **License**
+
+Three rules that are easy to drift back into:
+
+* **State the supported game version once.** If a badge carries it, do not repeat it in prose; if
+  there is no badge, it is a line in Requirements.
+* **Requirements lists what is needed, not what is not.** "No FinalIK, no asset bundles" tells a
+  reader nothing they can act on.
+* **Known limits are limits that are true**, verified in this mod. Not things merely untested, and
+  not problems borrowed from another project.
+
+American spelling for the heading, matching the LICENSE filename. All three carry the same MIT
+LICENSE, byte for byte.
+
 ## Applied here
 
 | version | game | tag |

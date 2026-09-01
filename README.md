@@ -4,8 +4,6 @@ First-person body presence in Beat Saber using **the game's own Beat Avatar** �
 already made in the avatar editor and that other players see in multiplayer — instead of a custom
 model.
 
-Targets **Beat Saber 1.45.0**.
-
 ![built for 1.45.0](https://img.shields.io/badge/Beat%20Saber-1.45.0-blue)
 
 ## What it does
@@ -25,9 +23,6 @@ dependency-light alternative for people who just want to see the body they alrea
 * Beat Saber 1.45.0 with BSIPA
 * [BeatSaberMarkupLanguage](https://github.com/monkeymanboy/BeatSaberMarkupLanguage) (BSML) — for
   the settings panel
-
-No FinalIK, no DynamicBone, no asset bundles. The Beat Avatar has four bones and no IK, so none of
-that is needed.
 
 ## Installing
 
@@ -54,6 +49,13 @@ the shipped values.
 Settings are saved when you close the panel, into `UserData/BeatAvatars.json`, which you can
 also edit by hand.
 
+## Notes
+
+[NOTES.md](NOTES.md) records what had to be measured to make this work, including several things
+that are not obvious — the URP renderer's second layer filter, an interface
+event the game never raises, and why a mirror image cannot be a rotation. Worth reading before
+changing anything.
+
 ## Building
 
 **No game binary is committed to this repository.** Beat Saber's assemblies are not
@@ -68,18 +70,11 @@ The install needs BSIPA applied (for `IPA.Loader.dll` in `Beat Saber_Data\Manage
 present (`Plugins\BSML.dll`). The build fails with a message saying which is missing rather than
 emitting a DLL against whatever happened to be lying around.
 
-## Notes
-
-[NOTES.md](NOTES.md) records what had to be measured to make this work, including several things
-that are not obvious — the URP renderer's second layer filter, an interface
-event the game never raises, and why a mirror image cannot be a rotation. Worth reading before
-changing anything.
-
 ## Releasing
 
 Tag and branch naming is documented in [RELEASING.md](RELEASING.md), and is shared with the other
 Beat Saber mods alongside this one.
 
-## Licence
+## License
 
 MIT — see [LICENSE](LICENSE).
