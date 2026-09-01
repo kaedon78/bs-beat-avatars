@@ -31,6 +31,10 @@ namespace BeatAvatars
         [OnStart]
         public void OnStart()
         {
+            // Says OnStart ran at all. Without it, a controller that stalls before its own first
+            // log is indistinguishable from a plugin that never started.
+            Log.Info("Starting.");
+
             var host = new GameObject("BeatAvatars");
             Object.DontDestroyOnLoad(host);
 
