@@ -75,6 +75,11 @@ that are not obvious — the URP renderer's second layer filter, an interface
 event the game never raises, and why a mirror image cannot be a rotation. Worth reading before
 changing anything.
 
+## Releasing
+
+Tag and branch naming is documented in [RELEASING.md](RELEASING.md), and is shared with the other
+Beat Saber mods alongside this one.
+
 ## Licence
 
 MIT — see [LICENSE](LICENSE).
