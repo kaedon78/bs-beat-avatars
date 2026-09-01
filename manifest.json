@@ -3,7 +3,7 @@
   "id": "BeatAvatars",
   "name": "BeatAvatars",
   "author": "Kaedon",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Your avatar as your in-game body, using the game's own Beat Avatar instead of a custom model.",
   "gameVersion": "1.45.0",
   "dependsOn": {
