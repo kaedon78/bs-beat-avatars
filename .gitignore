@@ -4,3 +4,6 @@ obj/
 # assemblies to reference. Never committed -- see the note about game binaries in the README.
 beatsaberdir.txt
 dist/
+
+# Crash debris from Windows shell tooling; never part of a build.
+*.stackdump
