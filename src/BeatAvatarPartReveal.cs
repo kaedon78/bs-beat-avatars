@@ -2,7 +2,7 @@ using System.Reflection;
 using BeatSaber.BeatAvatarSDK;
 using UnityEngine;
 
-namespace BeatAvatarBody
+namespace BeatAvatars
 {
     /// <summary>
     /// Turns on the head parts the avatar prefabs ship switched off.

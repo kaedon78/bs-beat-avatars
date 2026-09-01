@@ -2,7 +2,7 @@ using System;
 using BeatSaber.AvatarCore;
 using UnityEngine;
 
-namespace BeatAvatarBody
+namespace BeatAvatars
 {
     /// <summary>
     /// A second avatar standing in front of the player, mirroring them, so hand position, rotation
@@ -50,9 +50,9 @@ namespace BeatAvatarBody
             Transform space,
             Vector3 containerOffset,
             LocalAvatarVisualProvider visualProvider,
-            BeatAvatarBodyConfig config)
+            BeatAvatarsConfig config)
         {
-            var container = new GameObject("BeatAvatarBodyPreview");
+            var container = new GameObject("BeatAvatarsPreview");
             container.transform.SetParent(space, false);
             container.transform.localPosition = containerOffset;
             container.transform.localRotation = Quaternion.identity;
@@ -84,15 +84,15 @@ namespace BeatAvatarBody
             return new PreviewAvatar(container, avatar, reveal);
         }
 
-        internal void ApplyConfig(BeatAvatarBodyConfig config)
+        internal void ApplyConfig(BeatAvatarsConfig config)
         {
             ApplyScales(_avatar, config);
 
             if (_container != null)
-                _container.transform.localPosition = BeatAvatarBodyConfig.Offset.ToVector3(config.previewPosition);
+                _container.transform.localPosition = BeatAvatarsConfig.Offset.ToVector3(config.previewPosition);
         }
 
-        private static void ApplyScales(Avatar avatar, BeatAvatarBodyConfig config)
+        private static void ApplyScales(Avatar avatar, BeatAvatarsConfig config)
         {
             BeatSaber.BeatAvatarSDK.BeatAvatarPoseController bones = AvatarBones.PoseController(avatar);
             AvatarBones.SetScale(AvatarBones.LeftHand(bones), config.handScale);

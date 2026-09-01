@@ -3,7 +3,7 @@ using BeatSaber.AvatarCore;
 using BeatSaber.BeatAvatarSDK;
 using UnityEngine;
 
-namespace BeatAvatarBody
+namespace BeatAvatars
 {
     /// <summary>
     /// The four bones BeatAvatarPoseController drives, read off the component by reflection.

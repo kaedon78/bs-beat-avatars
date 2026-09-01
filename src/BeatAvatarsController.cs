@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Zenject;
 
-namespace BeatAvatarBody
+namespace BeatAvatars
 {
     /// <summary>
     /// Spawns the player's Beat Avatar into whatever scene they are in, and keeps it spawned.
@@ -17,9 +17,9 @@ namespace BeatAvatarBody
     /// one is needed. Polling that is a couple of lines and cannot go stale the way a list of
     /// scene names does.
     /// </summary>
-    internal sealed class BeatAvatarBodyController : MonoBehaviour
+    internal sealed class BeatAvatarsController : MonoBehaviour
     {
-        internal static BeatAvatarBodyController Instance { get; private set; }
+        internal static BeatAvatarsController Instance { get; private set; }
 
         internal IAvatarSystem AvatarSystem { get; private set; }
         internal AvatarSystemCollection Collection { get; private set; }
@@ -34,12 +34,12 @@ namespace BeatAvatarBody
         private PreviewAvatar _preview;
         private bool _spawning;
 
-        internal BeatAvatarBodyConfig Config { get; private set; }
+        internal BeatAvatarsConfig Config { get; private set; }
 
         private void Awake()
         {
             Instance = this;
-            Config = BeatAvatarBodyConfig.Load();
+            Config = BeatAvatarsConfig.Load();
         }
 
         private IEnumerator Start()
@@ -189,8 +189,8 @@ namespace BeatAvatarBody
                 poseProvider.space = PoseSpace;
                 poseProvider.head = Camera.main != null ? Camera.main.transform : null;
                 poseProvider.useControllerOffsets = Config.useControllerOffsets;
-                poseProvider.handPositionOffset = BeatAvatarBodyConfig.Offset.ToVector3(Config.handPositionOffset);
-                poseProvider.handRotationOffset = BeatAvatarBodyConfig.Offset.ToVector3(Config.handRotationOffset);
+                poseProvider.handPositionOffset = BeatAvatarsConfig.Offset.ToVector3(Config.handPositionOffset);
+                poseProvider.handRotationOffset = BeatAvatarsConfig.Offset.ToVector3(Config.handRotationOffset);
                 poseProvider.ResolveHands();
                 poseProvider.Sample();
 
@@ -309,8 +309,8 @@ namespace BeatAvatarBody
             if (_poseProvider != null)
             {
                 _poseProvider.useControllerOffsets = Config.useControllerOffsets;
-                _poseProvider.handPositionOffset = BeatAvatarBodyConfig.Offset.ToVector3(Config.handPositionOffset);
-                _poseProvider.handRotationOffset = BeatAvatarBodyConfig.Offset.ToVector3(Config.handRotationOffset);
+                _poseProvider.handPositionOffset = BeatAvatarsConfig.Offset.ToVector3(Config.handPositionOffset);
+                _poseProvider.handRotationOffset = BeatAvatarsConfig.Offset.ToVector3(Config.handRotationOffset);
                 _poseProvider.ResolveHands();
             }
 
@@ -340,7 +340,7 @@ namespace BeatAvatarBody
 
                 _preview = PreviewAvatar.Create(
                     avatar, _poseProvider, space,
-                    BeatAvatarBodyConfig.Offset.ToVector3(Config.previewPosition),
+                    BeatAvatarsConfig.Offset.ToVector3(Config.previewPosition),
                     _visualProvider, Config);
 
             }

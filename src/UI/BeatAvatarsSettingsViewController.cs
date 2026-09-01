@@ -3,7 +3,7 @@ using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using UnityEngine;
 
-namespace BeatAvatarBody.UI
+namespace BeatAvatars.UI
 {
     /// <summary>
     /// The tuning panel. Every value writes straight through to the live config and pushes it onto
@@ -13,10 +13,10 @@ namespace BeatAvatarBody.UI
     /// preview flicker on every tick. The one exception is the head-hiding toggle, which changes a
     /// layer assignment made at spawn and says so in its hint.
     /// </summary>
-    [ViewDefinition("BeatAvatarBody.UI.Views.Settings.bsml")]
-    internal class BeatAvatarBodySettingsViewController : BSMLAutomaticViewController
+    [ViewDefinition("BeatAvatars.UI.Views.Settings.bsml")]
+    internal class BeatAvatarsSettingsViewController : BSMLAutomaticViewController
     {
-        private BeatAvatarBodyConfig Config => BeatAvatarBodyController.Instance?.Config;
+        private BeatAvatarsConfig Config => BeatAvatarsController.Instance?.Config;
 
         /// <summary>
         /// What everything was when the panel opened. Each slider's undo button restores from this,
@@ -24,7 +24,7 @@ namespace BeatAvatarBody.UI
         /// saved, and "put it back how it was" is the one you want after an experiment went wrong.
         /// Retaken on every activation, so a second visit undoes to the second visit's start.
         /// </summary>
-        private BeatAvatarBodyConfig _openedWith;
+        private BeatAvatarsConfig _openedWith;
 
         // Slider increments here are 0.005 and 1, so a difference this small is a float artefact
         // rather than an edit the player made.
@@ -36,7 +36,7 @@ namespace BeatAvatarBody.UI
 
         private void Changed(string undoProperty)
         {
-            BeatAvatarBodyController.Instance?.ApplyConfigToCurrentAvatar();
+            BeatAvatarsController.Instance?.ApplyConfigToCurrentAvatar();
 
             // Only the affected button plus the summary, not all of them: a slider drag raises a
             // value change every frame, and re-evaluating every undo button on each one is work
@@ -144,12 +144,12 @@ namespace BeatAvatarBody.UI
             canUndoHandRotationX || canUndoHandRotationY || canUndoHandRotationZ ||
             (Ready && Config.useControllerOffsets != _openedWith.useControllerOffsets);
 
-        private void Revert(string valueProperty, string undoProperty, Action<BeatAvatarBodyConfig, BeatAvatarBodyConfig> restore)
+        private void Revert(string valueProperty, string undoProperty, Action<BeatAvatarsConfig, BeatAvatarsConfig> restore)
         {
             if (!Ready) return;
 
             restore(Config, _openedWith);
-            BeatAvatarBodyController.Instance?.ApplyConfigToCurrentAvatar();
+            BeatAvatarsController.Instance?.ApplyConfigToCurrentAvatar();
 
             NotifyPropertyChanged(valueProperty);
             NotifyPropertyChanged(undoProperty);
@@ -200,11 +200,11 @@ namespace BeatAvatarBody.UI
             Config.bodyScale = _openedWith.bodyScale;
             Config.headVerticalOffset = _openedWith.headVerticalOffset;
             Config.bodyVerticalOffset = _openedWith.bodyVerticalOffset;
-            Config.handPositionOffset = BeatAvatarBodyConfig.Offset.Copy(_openedWith.handPositionOffset);
-            Config.handRotationOffset = BeatAvatarBodyConfig.Offset.Copy(_openedWith.handRotationOffset);
+            Config.handPositionOffset = BeatAvatarsConfig.Offset.Copy(_openedWith.handPositionOffset);
+            Config.handRotationOffset = BeatAvatarsConfig.Offset.Copy(_openedWith.handRotationOffset);
             Config.useControllerOffsets = _openedWith.useControllerOffsets;
 
-            BeatAvatarBodyController.Instance?.ApplyConfigToCurrentAvatar();
+            BeatAvatarsController.Instance?.ApplyConfigToCurrentAvatar();
             NotifyEverything();
         }
 
@@ -213,7 +213,7 @@ namespace BeatAvatarBody.UI
         {
             if (Config == null) return;
 
-            var defaults = new BeatAvatarBodyConfig();
+            var defaults = new BeatAvatarsConfig();
             Config.handScale = defaults.handScale;
             Config.headScale = defaults.headScale;
             Config.bodyScale = defaults.bodyScale;
@@ -223,7 +223,7 @@ namespace BeatAvatarBody.UI
             Config.handRotationOffset = defaults.handRotationOffset;
             Config.useControllerOffsets = defaults.useControllerOffsets;
 
-            BeatAvatarBodyController.Instance?.ApplyConfigToCurrentAvatar();
+            BeatAvatarsController.Instance?.ApplyConfigToCurrentAvatar();
             NotifyEverything();
         }
 
@@ -275,7 +275,7 @@ namespace BeatAvatarBody.UI
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
 
             NotifyEverything();
-            BeatAvatarBodyController.Instance?.ShowPreviewAsync();
+            BeatAvatarsController.Instance?.ShowPreviewAsync();
         }
 
         public override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
@@ -283,7 +283,7 @@ namespace BeatAvatarBody.UI
             // Saving here rather than on every slider change: a drag raises a value change per
             // frame, and rewriting the file at that rate is real disk traffic for no benefit.
             Config?.Save();
-            BeatAvatarBodyController.Instance?.HidePreview();
+            BeatAvatarsController.Instance?.HidePreview();
             base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
         }
     }

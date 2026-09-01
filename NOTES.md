@@ -1,7 +1,7 @@
-# BeatAvatarBody
+# BeatAvatars
 
 First-person body presence using the **base game's own Beat Avatar** instead of a custom model.
-Source in [src/BeatAvatarBody](../src/BeatAvatarBody). Targets 1.45.0.
+Source in [src/BeatAvatars](../src/BeatAvatars). Targets 1.45.0.
 
 Written from scratch rather than by porting CustomAvatars, which targets 1.41.1 and depends on
 FinalIK and DynamicBone. The Beat Avatar has no IK, no bones beyond four, no DynamicBone and no
@@ -157,11 +157,11 @@ matching the CustomAvatars/Camera2 convention. We touch the HMD camera's mask an
 
 ## Settings
 
-A dedicated **"Beat Avatar Body"** menu button opening its own `FlowCoordinator`, not a Mod Settings
+A dedicated **"Beat Avatars"** menu button opening its own `FlowCoordinator`, not a Mod Settings
 tab. Mod Settings is a narrow modal that fills the space in front of the player, which is where the
 preview has to go. CustomAvatars reaches the same conclusion for the same reason.
 
-`UserData/BeatAvatarBody.json`, also editable by hand:
+`UserData/BeatAvatars.json`, also editable by hand:
 
 | key | meaning |
 |---|---|

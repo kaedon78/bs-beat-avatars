@@ -3,10 +3,10 @@ using System.IO;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace BeatAvatarBody
+namespace BeatAvatars
 {
     /// <summary>
-    /// UserData\BeatAvatarBody.json. Written with defaults on first run so there is something to
+    /// UserData\BeatAvatars.json. Written with defaults on first run so there is something to
     /// edit, and read once at start-up.
     ///
     /// This exists mainly so the sizing knobs can be tuned without a rebuild. Whether the Beat
@@ -14,7 +14,7 @@ namespace BeatAvatarBody
     /// make, and the round trip through a rebuild and a redeploy for each guess is the expensive
     /// part of answering it.
     /// </summary>
-    internal sealed class BeatAvatarBodyConfig
+    internal sealed class BeatAvatarsConfig
     {
         /// <summary>
         /// Uniform scale on the hand bones. The BeatAvatar's hands are drawn for a multiplayer
@@ -103,9 +103,9 @@ namespace BeatAvatarBody
         /// A value copy, used by the settings panel to remember what everything was when it opened
         /// so each slider can be put back individually.
         /// </summary>
-        internal BeatAvatarBodyConfig Clone()
+        internal BeatAvatarsConfig Clone()
         {
-            return new BeatAvatarBodyConfig
+            return new BeatAvatarsConfig
             {
                 handScale = handScale,
                 headScale = headScale,
@@ -120,20 +120,20 @@ namespace BeatAvatarBody
             };
         }
 
-        internal static BeatAvatarBodyConfig Load()
+        internal static BeatAvatarsConfig Load()
         {
             string path = Path.GetFullPath(Path.Combine(
-                Application.dataPath, "..", "UserData", "BeatAvatarBody.json"));
+                Application.dataPath, "..", "UserData", "BeatAvatars.json"));
 
             try
             {
                 if (File.Exists(path))
                 {
-                    var loaded = JsonConvert.DeserializeObject<BeatAvatarBodyConfig>(File.ReadAllText(path));
+                    var loaded = JsonConvert.DeserializeObject<BeatAvatarsConfig>(File.ReadAllText(path));
                     if (loaded != null) return loaded;
                 }
 
-                var defaults = new BeatAvatarBodyConfig();
+                var defaults = new BeatAvatarsConfig();
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 File.WriteAllText(path, JsonConvert.SerializeObject(defaults, Formatting.Indented));
                 return defaults;
@@ -141,7 +141,7 @@ namespace BeatAvatarBody
             catch (Exception ex)
             {
                 Plugin.Log.Error("Config load failed, using defaults: " + ex);
-                return new BeatAvatarBodyConfig();
+                return new BeatAvatarsConfig();
             }
         }
 
@@ -155,7 +155,7 @@ namespace BeatAvatarBody
             try
             {
                 string path = Path.GetFullPath(Path.Combine(
-                    Application.dataPath, "..", "UserData", "BeatAvatarBody.json"));
+                    Application.dataPath, "..", "UserData", "BeatAvatars.json"));
 
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));

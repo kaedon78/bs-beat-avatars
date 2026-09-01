@@ -3,7 +3,7 @@ using BeatSaber.AvatarCore;
 using UnityEngine;
 using UnityEngine.XR;
 
-namespace BeatAvatarBody
+namespace BeatAvatars
 {
     /// <summary>
     /// Feeds the local player's head and hands to an <see cref="Avatar"/> in place of the network

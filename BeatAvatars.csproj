@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>BeatAvatarBody</AssemblyName>
-    <RootNamespace>BeatAvatarBody</RootNamespace>
+    <AssemblyName>BeatAvatars</AssemblyName>
+    <RootNamespace>BeatAvatars</RootNamespace>
   </PropertyGroup>
 
   <!--
@@ -17,14 +17,14 @@
     LogicalName is set explicitly on both, and must stay that way.
 
     MSBuild derives an embedded resource's default name from its path relative to the project, so
-    a file under src\ becomes BeatAvatarBody.src.UI.Views.Settings.bsml. Nothing fails at build
+    a file under src\ becomes BeatAvatars.src.UI.Views.Settings.bsml. Nothing fails at build
     time; [ViewDefinition] simply does not find the view, and the settings panel comes up empty
     when a player opens it. BSIPA is more forgiving, taking any resource whose name ends in
     manifest.json, but pinning both means moving a file cannot quietly break either.
   -->
   <ItemGroup>
-    <EmbeddedResource Include="manifest.json" LogicalName="BeatAvatarBody.manifest.json" />
-    <EmbeddedResource Include="src\UI\Views\Settings.bsml" LogicalName="BeatAvatarBody.UI.Views.Settings.bsml" />
+    <EmbeddedResource Include="manifest.json" LogicalName="BeatAvatars.manifest.json" />
+    <EmbeddedResource Include="src\UI\Views\Settings.bsml" LogicalName="BeatAvatars.UI.Views.Settings.bsml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -79,7 +79,7 @@
       <Private>false</Private>
     </Reference>
 
-    <!-- Reading UserData\BeatAvatarBody.json. -->
+    <!-- Reading UserData\BeatAvatars.json. -->
     <!-- The tuning panel: BSML for the view, HMUI for FlowCoordinator/ViewController. -->
     <Reference Include="BSML">
       <HintPath>$(GamePluginsDir)BSML.dll</HintPath>

@@ -1,4 +1,4 @@
-# Beat Avatar Body
+# Beat Avatars
 
 First-person body presence in Beat Saber using **the game's own Beat Avatar** — the character you
 already made in the avatar editor and that other players see in multiplayer — instead of a custom
@@ -31,11 +31,11 @@ that is needed.
 
 ## Installing
 
-Drop `BeatAvatarBody.dll` into your `Plugins` folder.
+Drop `BeatAvatars.dll` into your `Plugins` folder.
 
 ## Settings
 
-A **Beat Avatar Body** button on the main menu opens the panel. A mirrored copy of your avatar
+A **Beat Avatars** button on the main menu opens the panel. A mirrored copy of your avatar
 appears in front of you while it is open, so every change is visible as you make it.
 
 | Setting | What it does |
@@ -52,7 +52,7 @@ Each slider has an **undo** button that puts that one setting back to what it wa
 the panel — greyed out until you change it. **Undo all** does the lot; **Defaults** starts over from
 the shipped values.
 
-Settings are saved when you close the panel, into `UserData/BeatAvatarBody.json`, which you can
+Settings are saved when you close the panel, into `UserData/BeatAvatars.json`, which you can
 also edit by hand.
 
 ## Building
@@ -61,7 +61,7 @@ also edit by hand.
 redistributable, so the build reads them out of an install you already have. Point it at one, in
 order of precedence:
 
-1. `dotnet build -c Release -p:BeatSaberDir="C:\Path\To\Beat Saber" BeatAvatarBody.csproj`
+1. `dotnet build -c Release -p:BeatSaberDir="C:\Path\To\Beat Saber" BeatAvatars.csproj`
 2. a `BEAT_SABER_DIR` environment variable
 3. a `beatsaberdir.txt` file at the repository root containing just the path (gitignored)
 

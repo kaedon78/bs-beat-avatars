@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-namespace BeatAvatarBody
+namespace BeatAvatars
 {
     /// <summary>
     /// Layer bookkeeping. This is where first-person body presence actually lives or dies: the

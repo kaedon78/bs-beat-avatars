@@ -2,7 +2,7 @@
 
   <bg background="title-gradient" size-delta="90 8" anchor-min="0.5 1" anchor-max="0.5 1"
       background-color="#FFF3" background-color0="#FFF0" background-color1="#FFFF" pivot="0.5 1">
-    <text text="Beat Avatar Body" anchor-min="0 0" anchor-max="1 1" size-delta="0 0"
+    <text text="Beat Avatars" anchor-min="0 0" anchor-max="1 1" size-delta="0 0"
           font-size="6" italics="true" all-uppercase="true" align="Midline" />
   </bg>
 

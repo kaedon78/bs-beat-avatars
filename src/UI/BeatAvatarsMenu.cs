@@ -5,10 +5,10 @@ using BeatSaberMarkupLanguage.MenuButtons;
 using HMUI;
 using UnityEngine;
 
-namespace BeatAvatarBody.UI
+namespace BeatAvatars.UI
 {
     /// <summary>
-    /// Registers the "Beat Avatar Body" button on the main menu and presents the tuning panel.
+    /// Registers the "Beat Avatars" button on the main menu and presents the tuning panel.
     ///
     /// A dedicated menu button and flow coordinator, NOT a Mod Settings tab. Mod Settings is a
     /// narrow modal -- this repo's notes put its usable body at about 90 units, with checkbox
@@ -18,10 +18,10 @@ namespace BeatAvatarBody.UI
     /// conclusion and for the same reason: its Avatars button opens its own flow coordinator with
     /// the mirror in the world and the settings beside it.
     /// </summary>
-    internal sealed class BeatAvatarBodyMenu : MonoBehaviour
+    internal sealed class BeatAvatarsMenu : MonoBehaviour
     {
         private MenuButton _menuButton;
-        private BeatAvatarBodyFlowCoordinator _flowCoordinator;
+        private BeatAvatarsFlowCoordinator _flowCoordinator;
 
         private IEnumerator Start()
         {
@@ -50,9 +50,9 @@ namespace BeatAvatarBody.UI
 
         private void Register()
         {
-            _flowCoordinator = BeatSaberUI.CreateFlowCoordinator<BeatAvatarBodyFlowCoordinator>();
+            _flowCoordinator = BeatSaberUI.CreateFlowCoordinator<BeatAvatarsFlowCoordinator>();
             _menuButton = new MenuButton(
-                "Beat Avatar Body",
+                "Beat Avatars",
                 "Size and grip of your first-person body.",
                 () => BeatSaberUI.MainFlowCoordinator.PresentFlowCoordinator(_flowCoordinator));
 
@@ -72,18 +72,18 @@ namespace BeatAvatarBody.UI
         }
     }
 
-    internal sealed class BeatAvatarBodyFlowCoordinator : FlowCoordinator
+    internal sealed class BeatAvatarsFlowCoordinator : FlowCoordinator
     {
-        private BeatAvatarBodySettingsViewController _settingsViewController;
+        private BeatAvatarsSettingsViewController _settingsViewController;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             if (!firstActivation) return;
 
-            SetTitle("Beat Avatar Body");
+            SetTitle("Beat Avatars");
             showBackButton = true;
 
-            _settingsViewController = BeatSaberUI.CreateViewController<BeatAvatarBodySettingsViewController>();
+            _settingsViewController = BeatSaberUI.CreateViewController<BeatAvatarsSettingsViewController>();
             ProvideInitialViewControllers(_settingsViewController);
         }
 

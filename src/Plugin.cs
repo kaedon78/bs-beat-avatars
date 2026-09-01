@@ -2,7 +2,7 @@ using IPA;
 using UnityEngine;
 using IPALogger = IPA.Logging.Logger;
 
-namespace BeatAvatarBody
+namespace BeatAvatars
 {
     /// <summary>
     /// First-person body presence built on the game's OWN avatar system, not on custom models.
@@ -31,11 +31,11 @@ namespace BeatAvatarBody
         [OnStart]
         public void OnStart()
         {
-            var host = new GameObject("BeatAvatarBody");
+            var host = new GameObject("BeatAvatars");
             Object.DontDestroyOnLoad(host);
 
-            host.AddComponent<BeatAvatarBodyController>();
-            host.AddComponent<UI.BeatAvatarBodyMenu>();
+            host.AddComponent<BeatAvatarsController>();
+            host.AddComponent<UI.BeatAvatarsMenu>();
         }
     }
 }

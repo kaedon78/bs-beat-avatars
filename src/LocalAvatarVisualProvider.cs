@@ -6,7 +6,7 @@ using BeatSaber.AvatarCore;
 using BeatSaber.BeatAvatarAdapter;
 using BeatSaber.BeatAvatarSDK;
 
-namespace BeatAvatarBody
+namespace BeatAvatars
 {
     /// <summary>
     /// Supplies the player's OWN saved avatar appearance -- the one edited in the game's avatar
