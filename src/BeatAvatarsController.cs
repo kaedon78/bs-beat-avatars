@@ -12,10 +12,9 @@ namespace BeatAvatars
     /// <summary>
     /// Spawns the player's Beat Avatar into whatever scene they are in, and keeps it spawned.
     ///
-    /// Scene names are deliberately not used to decide when to act. The thing that matters is the
-    /// player-space transform: when it changes, the old avatar died with the old scene and a new
-    /// one is needed. Polling that is a couple of lines and cannot go stale the way a list of
-    /// scene names does.
+    /// Scene names are not used to decide when to act. What matters is the player-space transform:
+    /// when it changes, the old avatar died with the old scene. That cannot go stale the way a
+    /// list of scene names does.
     /// </summary>
     internal sealed class BeatAvatarsController : MonoBehaviour
     {
@@ -41,11 +40,9 @@ namespace BeatAvatars
         private const int kMaxVisualRecoveries = 2;
 
         /// <summary>
-        /// What the shared parts model resolves the player's own ids to.
-        ///
-        /// This is the question a respawn cannot answer. If the avatar INSTANCE lost its meshes,
-        /// a reload fixes it; if the AvatarPartsModel is handing out parts whose mesh is already
-        /// null, every avatar built from it is empty and no amount of reloading helps.
+        /// What the shared parts model resolves the player's own ids to -- the question a respawn
+        /// cannot answer, since a model handing out empty parts makes every avatar built from it
+        /// empty too.
         /// </summary>
         private string PartsModelState()
         {
@@ -175,17 +172,11 @@ namespace BeatAvatars
         /// <summary>
         /// Respawns the avatar when its meshes have gone out from under it.
         ///
-        /// Measured 2026-09-01: applying anything in the game's own Settings leaves the avatar
-        /// tracking perfectly, on the right layers, active and unscaled, with every camera and
-        /// pipeline mask intact -- and with headTop, clothes and hands all reading NULL. Nothing
-        /// throws. Only the head sphere is left, because that mesh is baked into the prefab while
-        /// the others come from AvatarData, which is why it shows up as "the avatar vanished from
-        /// my view but its head is still in the mirror".
-        ///
-        /// Re-pushing the visual data would not be enough if the underlying assets have been
-        /// released, so this reloads the prefab instead: a respawn is a path already exercised on
-        /// every scene change. Rate limited, because an avatar that came back empty would
-        /// otherwise respawn on every tick forever.
+        /// A safety net, not the fix: the cause of that was a stale container, handled in
+        /// SpawnAsync. It stays because the failure is silent -- the avatar tracks perfectly and
+        /// wears nothing -- and because the respawn re-resolves the container, so it can heal a
+        /// case this does not yet know about. Capped: an avatar that comes back empty would
+        /// otherwise respawn forever.
         /// </summary>
         private void RecoverLostVisuals()
         {
@@ -222,11 +213,9 @@ namespace BeatAvatars
         /// <summary>
         /// Says so, once, when something outside this mod resets the layer state it depends on.
         ///
-        /// Silent in steady state: all three appliers only report when the value was actually
-        /// wrong, and the first pass after a scene load is expected to correct things. What this
-        /// catches is a reset in the MIDDLE of a scene, which is what applying graphics settings
-        /// appears to do -- the avatar goes missing while still tracking perfectly, so the log
-        /// otherwise looks healthy and says nothing about why nothing is drawn.
+        /// Silent in steady state, since the appliers only report a value that was actually wrong.
+        /// Blind to a reset that arrives WITH a respawn, because the first pass after one is
+        /// legitimately set-up -- so this catches a mid-scene reset and nothing else.
         /// </summary>
         private void ReportLayerReset(bool camera, bool mirror, bool pipeline)
         {
@@ -294,8 +283,7 @@ namespace BeatAvatars
 
         /// <summary>
         /// VRCenterAdjust is the room-offset transform the game applies the player's height and
-        /// position settings to, and is what CustomAvatars parents to as well. Falling back to
-        /// the main camera's parent covers scenes that have no VRCenterAdjust.
+        /// position settings to. The main camera's parent covers scenes that have none.
         /// </summary>
         private static Transform FindPlayerSpace()
         {
@@ -318,8 +306,7 @@ namespace BeatAvatars
                 // it -- and a stale one still resolves, which is what makes this so quiet. The
                 // avatar comes out fully formed and correctly tracked, injected with a parts model
                 // built from destroyed ScriptableObjects: the collections still have their counts,
-                // every id lookup misses, and every mesh lands null. Measured 2026-09-01,
-                // cachedContainerIsLive=False with the live container holding a healthy model.
+                // every id lookup misses, and every mesh lands null.
                 if (!RefreshContainer())
                 {
                     Plugin.Log.Warn("No live container to spawn the avatar with.");
@@ -409,13 +396,11 @@ namespace BeatAvatars
         }
 
         /// <summary>
-        /// One line per scene, once the rig has had a chance to settle.
+        /// One line per scene, once the rig has settled.
         ///
-        /// Deliberately not logged at spawn. The spawn instant is the worst moment to judge the
-        /// rig: in VR the scene is still building and the controllers do not exist yet, so a
-        /// spawn-time reading says MISSING for hands that resolve a tick later and are fine. That
-        /// reads as a fault when nothing is wrong, and buries the case where something is.
-        /// EnsureRig runs twice a second, so three seconds is many chances.
+        /// Not logged at spawn: the scene is still being built then, so a spawn-time reading
+        /// reports MISSING for hands that resolve a tick later and are fine. That cries fault when
+        /// there is none, and buries the case where there is one.
         /// </summary>
         private IEnumerator ReportRigWhenSettled(LocalPlayerPoseProvider provider, string scene)
         {
@@ -438,13 +423,9 @@ namespace BeatAvatars
         }
 
         /// <summary>
-        /// What the avatar is actually wearing, on the per-scene line.
-        ///
-        /// Kept after the hunt that needed it because it is the one piece of state that has
-        /// actually gone wrong in service: a stale container produced an avatar that tracked
-        /// perfectly and wore nothing, and no other line said so. Layers, masks, activation and
-        /// scale were all checked the same way and were never once at fault, so they are not
-        /// reported.
+        /// What the avatar is actually wearing -- the one piece of state that has gone wrong in
+        /// service, and which nothing else in the log would show. Layers, masks, activation and
+        /// scale were checked the same way and were never at fault, so they are not reported.
         /// </summary>
         private string DescribeVisibility()
         {

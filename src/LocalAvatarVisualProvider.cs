@@ -12,17 +12,13 @@ namespace BeatAvatars
     /// Supplies the player's OWN saved avatar appearance -- the one edited in the game's avatar
     /// editor and stored in AvatarData.dat -- and pushes an update when they change it.
     ///
-    /// The obvious hook, <see cref="IAvatarSystem.avatarDidChangeEvent"/>, is DEAD. Its only raiser
-    /// is AvatarSystem.RaiseAvatarDidChangeEvent, which is protected and, measured 2026-08-31, has
-    /// no caller in any of the 255 game assemblies -- the string occurs in
-    /// BeatSaber.AvatarCore.dll, where it is defined, and nowhere else. Subscribing to it compiles,
-    /// runs, and silently never fires: the interface advertises a notification the game never
-    /// sends.
+    /// The obvious hook, <see cref="IAvatarSystem.avatarDidChangeEvent"/>, is DEAD: its only
+    /// raiser is protected and has no caller in any game assembly, so subscribing compiles, runs,
+    /// and silently never fires.
     ///
-    /// The signal that does fire is <see cref="AvatarDataModel.didChangeAvatarDataEvent"/>, raised
-    /// by ReportAvatarChanged from the avatarData setter, which is what the avatar editor itself
-    /// listens to. We take both, so this keeps working if a later version starts raising the
-    /// system-level one.
+    /// The signal that does fire is <see cref="AvatarDataModel.didChangeAvatarDataEvent"/>, which
+    /// the game's own avatar editor listens to. Both are taken, so this keeps working if a later
+    /// version starts raising the system-level one.
     /// </summary>
     internal sealed class LocalAvatarVisualProvider : IAvatarVisualDataProvider, IDisposable
     {
@@ -51,11 +47,9 @@ namespace BeatAvatars
             {
                 avatarDataModel.didChangeAvatarDataEvent += provider.HandleAvatarDataChanged;
 
-                // Also the SAVE event. didChangeAvatarDataEvent comes off the avatarData setter,
-                // which only fires when the whole AvatarData object is replaced with a different
-                // one -- an editor that mutates its working copy in place and then saves would
-                // never raise it. Taking both means one of them catches the edit whichever way the
-                // editor commits.
+                // Also the SAVE event: the change event comes off the avatarData setter and only
+                // fires when the object is replaced, so an editor that mutates in place and saves
+                // would never raise it. Between the two, either commit path is caught.
                 avatarDataModel.didSaveAvatarDataEvent += provider.HandleAvatarDataSaved;
             }
             else
@@ -83,8 +77,8 @@ namespace BeatAvatars
         }
 
         /// <summary>
-        /// The live path. The new AvatarData arrives with the event, so this needs no round trip
-        /// back through the system -- and it works even before the edit has been saved to disk.
+        /// The live path: the new AvatarData arrives with the event, so this needs no round trip
+        /// through the system and works before the edit is saved to disk.
         /// </summary>
         private void HandleAvatarDataChanged(AvatarData avatarData)
         {

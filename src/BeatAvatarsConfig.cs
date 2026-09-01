@@ -6,13 +6,10 @@ using UnityEngine;
 namespace BeatAvatars
 {
     /// <summary>
-    /// UserData\BeatAvatars.json. Written with defaults on first run so there is something to
-    /// edit, and read once at start-up.
+    /// UserData\BeatAvatars.json. Written with defaults on first run, read once at start-up.
     ///
-    /// This exists mainly so the sizing knobs can be tuned without a rebuild. Whether the Beat
-    /// Avatar's hands look right in first person is a judgement only someone in the headset can
-    /// make, and the round trip through a rebuild and a redeploy for each guess is the expensive
-    /// part of answering it.
+    /// Whether the avatar looks right in first person is a judgement only someone in the headset
+    /// can make, so the knobs are tunable without a rebuild.
     /// </summary>
     internal sealed class BeatAvatarsConfig
     {

@@ -5,24 +5,16 @@ using UnityEngine;
 namespace BeatAvatars
 {
     /// <summary>
-    /// A second avatar standing in front of the player, mirroring them, so hand position, rotation
-    /// and size can be tuned while watching the result.
+    /// A second avatar in front of the player, mirroring them, so size and grip can be tuned while
+    /// watching the result.
     ///
-    /// The reflection is done by a container with a NEGATIVE Z SCALE, and the clone is then fed the
-    /// player's poses completely unchanged. This is CustomAvatars' approach and it is not merely
-    /// simpler than mirroring the poses -- it is the only one that is right.
+    /// The reflection is a container with a NEGATIVE Z SCALE, fed the player's poses unchanged.
+    /// Mirroring the poses instead cannot work: a reflection is orientation-reversing, so a
+    /// mirrored right hand is a LEFT hand and no rotation expresses that. It looks correct on the
+    /// torso, whose orientation is yaw-only, and wrong on the hands.
     ///
-    /// The first attempt here did mirror the poses, reflecting each position and rebuilding each
-    /// rotation from a reflected forward and up. The body looked correct and the hands did not, and
-    /// that split is the tell: the body's orientation is yaw-only, derived from the head by
-    /// BeatAvatarPoseController, so almost any plausible mirror gets it right. The hands carry full
-    /// 3D orientation AND chirality, and a reflection is orientation-reversing -- a mirrored right
-    /// hand is a LEFT hand, which no rotation can express. A negative scale can, because it is an
-    /// actual reflection.
-    ///
-    /// Note the plane: with the container at z = d and the player at the origin, a bone at local z
-    /// lands at d - z, which is a reflection about z = d/2. So the apparent mirror sits at HALF the
-    /// container distance.
+    /// With the container at z = d, a bone at local z lands at d - z, so the apparent mirror sits
+    /// at HALF the container distance.
     /// </summary>
     internal sealed class PreviewAvatar : IDisposable
     {
@@ -38,9 +30,7 @@ namespace BeatAvatars
         }
 
         /// <summary>
-        /// Re-runs the part reveal. Needed because the parts the prefab ships switched off are
-        /// exactly the ones our own pickers change, so the mirror has to follow the edit as well
-        /// as the body does.
+        /// Re-runs the part reveal, so an avatar edit reaches the mirror as well as the body.
         /// </summary>
         internal void ApplyReveal() => _reveal?.Apply();
 

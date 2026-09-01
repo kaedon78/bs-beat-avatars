@@ -8,14 +8,12 @@ using UnityEngine.Rendering.Universal;
 namespace BeatAvatars
 {
     /// <summary>
-    /// Layer bookkeeping. This is where first-person body presence actually lives or dies: the
-    /// avatar is a multiplayer avatar, so nothing about it expects to be inside the local
-    /// player's head.
+    /// Layer bookkeeping, which is where first-person body presence lives or dies: this is a
+    /// multiplayer avatar, and nothing about it expects to be inside the local player's head.
     ///
-    /// The layer numbers are the game's own, read out of the TagManager in globalgamemanagers on
-    /// 1.45.0 -- 10 is "Avatar", 3 and 7 are unnamed and free. They match the constants
-    /// CustomAvatars has used for years, which is what keeps mods that already cull layer 3 (and
-    /// third-person camera mods that re-add it) compatible with this one.
+    /// The numbers are the game's own -- 10 is "Avatar", 3 and 7 are unnamed and free -- and match
+    /// what CustomAvatars and Camera2 already use, which is what keeps mods that cull layer 3, or
+    /// re-add it for a third-person view, compatible with this one.
     /// </summary>
     internal static class AvatarLayers
     {
@@ -39,14 +37,12 @@ namespace BeatAvatars
             .GetField("_reflectLayers", BindingFlags.Instance | BindingFlags.NonPublic);
 
         /// <summary>
-        /// Puts the avatar on the Avatar layer and, if asked, moves the head bone's whole subtree
-        /// onto the third-person-only layer.
+        /// Puts the avatar on the Avatar layer and, if asked, the head bone's whole subtree on the
+        /// third-person-only layer.
         ///
-        /// Taking the head from BeatAvatarPoseController's own <c>_headTransform</c> rather than
-        /// matching renderer names is the point: the SDK names five head part fields
-        /// (head top, glasses, facial hair, eyes, mouth) but the head mesh itself is not among
-        /// them, so a field-by-field pass leaves a face floating in your view. Everything parented
-        /// under the head bone is head, by construction.
+        /// The head comes from the pose controller's own _headTransform, not from renderer names:
+        /// the SDK names five head part fields and the head mesh is not among them, so a
+        /// field-by-field pass leaves a face floating in your view.
         /// </summary>
         /// <returns>The head transform, or null if the avatar is not a BeatAvatar.</returns>
         internal static Transform Apply(Avatar avatar, bool hideHead)
@@ -88,22 +84,17 @@ namespace BeatAvatars
         }
 
         /// <summary>
-        /// Adds the avatar layers to every loaded mirror's reflect mask.
-        ///
-        /// <c>_reflectLayers</c> is a private LayerMask on a ScriptableObject, so this is a
-        /// reflection write to shared game state; it is idempotent and additive, but it does
-        /// persist for the process lifetime.
+        /// Adds the avatar layers to every loaded mirror's reflect mask. A reflection write to
+        /// shared game state: additive and idempotent, but it persists for the process lifetime.
         /// </summary>
         /// <summary>
         /// Adds the avatar layers to URP's own layer masks.
         ///
-        /// A camera's culling mask is NOT the only filter under URP: the ScriptableRenderer applies
-        /// opaqueLayerMask and transparentLayerMask on top of it, so a layer missing from those
-        /// renders on NO camera however that camera is configured. This is invisible to any
-        /// camera-level check, which is why a mask that says the head should be drawn can sit
-        /// alongside a third-person view that does not draw it.
+        /// A camera's culling mask is NOT the only filter under URP: the ScriptableRenderer ANDs
+        /// opaqueLayerMask and transparentLayerMask on top, so a layer missing from those renders
+        /// on NO camera however that camera is configured. No camera-level check can see this.
         ///
-        /// This is global state for the process lifetime, and idempotent: it only ever adds layers.
+        /// Global state for the process lifetime, and idempotent: it only ever adds layers.
         /// </summary>
         /// <summary>The renderer opaque mask as last observed, for diagnosis of a reset.</summary>
         internal static int LastOpaqueMask { get; private set; }

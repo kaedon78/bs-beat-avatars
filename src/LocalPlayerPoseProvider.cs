@@ -9,11 +9,9 @@ namespace BeatAvatars
     /// Feeds the local player's head and hands to an <see cref="Avatar"/> in place of the network
     /// peer poses a multiplayer avatar normally gets.
     ///
-    /// The poses must be LOCAL to the bones' own parent: BeatAvatar forwards them straight into
-    /// Transform.SetLocalPositionAndRotation (BeatAvatarPoseController.UpdateTransforms), exactly
-    /// as MultiplayerAvatarPoseController does with network poses. Feeding world poses works only
-    /// by accident, when that parent happens to sit at the origin unrotated, and breaks the moment
-    /// the room offset or a 360 map rotates it.
+    /// The poses must be LOCAL to the bones' own parent, because BeatAvatar forwards them straight
+    /// into SetLocalPositionAndRotation. World poses work only while that parent sits at the origin
+    /// unrotated, and break the moment the room offset or a 360 map turns it.
     /// </summary>
     internal sealed class LocalPlayerPoseProvider : MonoBehaviour, IAvatarPoseDataProvider
     {
@@ -54,10 +52,8 @@ namespace BeatAvatars
         /// <summary>
         /// Resolves the hands by scanning for <see cref="VRController"/> and matching XR node.
         ///
-        /// Deliberately not via PlayerVRControllersManager or MenuPlayerController: those are two
-        /// different components in two different scenes, and this has to work in both plus
-        /// whatever a mod adds. VRController.node is public and is the thing that actually
-        /// identifies a hand.
+        /// Not via PlayerVRControllersManager or MenuPlayerController: those are different
+        /// components in different scenes, and node is what actually identifies a hand.
         /// </summary>
         internal void ResolveHands()
         {
@@ -68,11 +64,10 @@ namespace BeatAvatars
 
             foreach (VRController controller in FindObjectsByType<VRController>(FindObjectsSortMode.None))
             {
-                // activeInHierarchy, NOT isActiveAndEnabled. Measured 2026-08-31: the menu's
-                // ControllerLeft/ControllerRight are active and poseValid, with the VRController
-                // COMPONENT disabled -- fpfc drives their transforms itself. Requiring enabled
-                // rejected both hands while the avatar still rendered them at their fallback rest
-                // pose, so the failure looked like a working avatar rather than a resolution bug.
+                // activeInHierarchy, NOT isActiveAndEnabled. The menu's controllers are active and
+                // poseValid with the VRController COMPONENT disabled -- fpfc drives their
+                // transforms itself -- so requiring enabled rejects both hands, and the avatar goes
+                // on rendering them at their fallback rest pose rather than looking broken.
                 if (!controller.gameObject.activeInHierarchy) continue;
 
                 if (controller.node == XRNode.LeftHand && leftHand == null) leftHand = controller;
@@ -84,18 +79,15 @@ namespace BeatAvatars
         }
 
         /// <summary>
-        /// The transform to follow for a hand.
+        /// The transform to follow for a hand: the saber anchor, not the controller.
         ///
-        /// VRController.Update writes the raw tracked node pose straight onto its own transform,
-        /// and VRController.position/rotation just return that -- the player's controller position
-        /// and rotation settings are NOT in it. Those are applied by TryGetControllerOffset onto
-        /// _viewAnchorTransform, a child, which is what the saber is mounted on. Following the
-        /// anchor is therefore what makes the avatar's hand sit in the same place and at the same
-        /// angle as the saber the player is actually holding; following the controller transform
-        /// gives a hand that is subtly rotated away from their own grip.
+        /// VRController.Update writes the RAW tracked node pose onto its own transform, and
+        /// position/rotation return that -- the player's grip settings are not in it. Those land on
+        /// _viewAnchorTransform, a child, which is where the saber is mounted. Follow the controller
+        /// instead and the hand sits subtly askew of the saber in it.
         ///
-        /// In mouse mode the anchor is reset to local identity, so this degrades to the raw pose
-        /// on its own and fpfc is unaffected.
+        /// In mouse mode the anchor is local identity, so this degrades to the raw pose and fpfc is
+        /// unaffected.
         /// </summary>
         private Transform Anchor(VRController controller)
         {
@@ -106,15 +98,13 @@ namespace BeatAvatars
         }
 
         /// <summary>
-        /// Re-resolves anything that went missing, and reports what it fixed.
+        /// Re-resolves the head or hands if either has gone missing.
         ///
-        /// Resolving once at spawn is not enough. Measured in VR 2026-08-31: dismissing the health
-        /// warning reloads the menu scene, the avatar is respawned into the half-built scene, and
-        /// Camera.main and the MenuControllers do not exist yet at that instant. The avatar then
-        /// froze in place with both hands parked at their rest pose for the rest of the session --
-        /// and it looked like a rendering bug rather than a resolution one, because a frozen avatar
-        /// is still a fully drawn avatar. In fpfc the transition is fast enough that this never
-        /// happened, so only a VR run could find it.
+        /// Resolving once at spawn is not enough: a scene can be rebuilt around the avatar, and at
+        /// the instant it respawns Camera.main and the controllers may not exist yet. A rig left
+        /// unresolved freezes the avatar in place with its hands at their rest pose, which reads as
+        /// a rendering fault rather than a tracking one, because a frozen avatar is still fully
+        /// drawn.
         /// </summary>
         internal void EnsureRig()
         {

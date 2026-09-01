@@ -13,29 +13,18 @@ namespace BeatAvatars.UI
     /// <summary>
     /// Registers the "Beat Avatars" button on the main menu and presents the tuning panel.
     ///
-    /// A dedicated menu button and flow coordinator, NOT a Mod Settings tab. Mod Settings is a
-    /// narrow modal -- its usable body is about 90 units, with checkbox labels ellipsizing near 54
-    /// characters and a half-width slider collapsing its label to a single character -- and, more
-    /// importantly, it fills the space in front of the player, which is exactly where a preview of
-    /// your own body has to go. CustomAvatars reaches the same conclusion for the same reason.
+    /// A dedicated button and flow coordinator, NOT a Mod Settings tab: that panel fills the space
+    /// in front of the player, which is exactly where the body preview has to go.
     ///
-    /// Registration has to REPEAT, and it is driven by scene loads rather than by a standing timer.
+    /// Registration REPEATS. BSML binds MenuButtons into the MENU container, so every menu rebuild
+    /// starts with an empty button list and a once-only registration silently stops working --
+    /// applying anything in the game's Settings is enough, and nothing is logged when it happens.
+    /// Containers are only rebuilt while loading a scene, so a short burst of retries after each
+    /// load covers it and costs nothing during a song.
     ///
-    /// BSML binds MenuButtons AsSingle into the MENU container, not the app container, so every
-    /// menu rebuild produces a fresh instance with an empty button list. Registering once at
-    /// start-up works until the first rebuild and then silently stops: the button is simply not in
-    /// the list any more. Applying anything in the game's own Settings is enough to cause it, and
-    /// nothing is logged when it happens.
-    ///
-    /// A container is only ever rebuilt as part of loading a scene, so sceneLoaded is the event
-    /// that matters. Retrying in a short burst after each load, instead of polling forever, means
-    /// no work at all during a song -- which is where spending anything repeatedly is least
-    /// welcome.
-    ///
-    /// The flow coordinator has the same lifetime problem from the other side.
-    /// BeatSaberUI.CreateFlowCoordinator puts it on a plain GameObject in the current scene, so a
-    /// cached one is destroyed by that same rebuild. It is created on demand instead, and the
-    /// Unity null check is true for a destroyed object as well as an absent one.
+    /// The flow coordinator has the same lifetime problem: CreateFlowCoordinator puts it on a plain
+    /// GameObject in the current scene, so it is created on demand rather than cached. The Unity
+    /// null check below is true for a destroyed object as well as an absent one.
     /// </summary>
     internal sealed class BeatAvatarsMenu : MonoBehaviour
     {
@@ -95,12 +84,9 @@ namespace BeatAvatars.UI
         /// <summary>
         /// BSML's menu container, or null, WITHOUT asking BSML for it.
         ///
-        /// BeatSaberUI.DiContainer is a property whose getter logs an error every time it is read
-        /// while still null -- the "Tried getting DiContainer too early!" line other mods produce
-        /// during boot. Polling that property is therefore not free: measured, a burst of retries
-        /// on every scene load took the count in one launch from 6 to 17, all of them noise this
-        /// plugin caused in someone else's logger. Read the backing field instead and stay silent
-        /// until there is genuinely something to register with.
+        /// BeatSaberUI.DiContainer's getter LOGS AN ERROR every time it is read while still null --
+        /// the "Tried getting DiContainer too early!" line seen during boot. Retrying through the
+        /// property therefore fills someone else's log with our noise; the backing field is silent.
         /// </summary>
         private static DiContainer MenuContainerOrNull()
         {

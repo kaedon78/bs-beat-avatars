@@ -8,9 +8,8 @@ namespace BeatAvatars
     /// <summary>
     /// The four bones BeatAvatarPoseController drives, read off the component by reflection.
     ///
-    /// They are serialized private fields, and going through them beats matching object names:
-    /// the names happen to be Head / LeftHand / RightHand / Clothes today, but the component's own
-    /// field is what the game actually poses, so it cannot disagree with what moves.
+    /// Its own serialized fields rather than object names: the field is what the game actually
+    /// poses, so it cannot disagree with what moves.
     /// </summary>
     internal static class AvatarBones
     {
@@ -39,11 +38,9 @@ namespace BeatAvatars
         }
 
         /// <summary>
-        /// Scales a bone in place. Safe against the pose controller, which writes the bone's LOCAL
-        /// position every frame -- a transform's own scale does not affect its own local position,
-        /// so the mesh shrinks around the tracked point instead of drifting off it. Scaling the
-        /// avatar ROOT would not have this property: the bone positions are expressed in the root's
-        /// space, so a scaled root moves every bone.
+        /// Scales a bone. The pose controller rewrites the bone's local position every frame and a
+        /// transform's own scale does not affect that, so the mesh shrinks around the tracked point.
+        /// Scaling the avatar root instead would move every bone.
         /// </summary>
         internal static void SetScale(Transform bone, float scale)
         {
@@ -52,35 +49,22 @@ namespace BeatAvatars
         }
 
         /// <summary>
-        /// Raises or lowers a bone's VISUAL child rather than the bone itself.
+        /// Raises or lowers a bone's VISUAL child, not the bone.
         ///
-        /// The bone cannot be moved: BeatAvatarPoseController writes its local position every
-        /// frame, so anything set on it is gone by the next pose event. Its child is never touched,
-        /// which makes this stick -- the same reason SetScale works on the bone but a position
-        /// would not.
-        ///
-        /// Using the child also decouples the head from the body. UpdateBodyPosition derives the
-        /// body from the head BONE, so moving the head bone would drag the torso with it; moving
-        /// the head's visuals leaves the body exactly where it was.
-        ///
-        /// The offset is in the bone's local space, which the bone's own scale applies to -- at a
-        /// head scale of 0.75 a 0.1 offset reads as 0.075. Both are tuned by eye against the
-        /// mirror, so this is left uncompensated rather than made surprising in the other
-        /// direction.
+        /// A position set on the bone is gone by the next pose event; the child is never touched.
+        /// Using the child also keeps the head independent of the body, which UpdateBodyPosition
+        /// derives from the head BONE. The offset is in the bone's local space, so the bone's own
+        /// scale applies to it.
         /// </summary>
         /// <summary>
-        /// What the visual controller currently has in its mesh slots.
-        ///
-        /// The head sphere is a fixed mesh on the prefab; head-top, clothes and hands are assigned
-        /// from AvatarData by UpdateAvatarVisual. So "only the head is left" and "the AvatarData
-        /// driven meshes went null" predict exactly the same picture, and this tells them apart.
+        /// What the visual controller currently has in its mesh slots. The head sphere is fixed on
+        /// the prefab while these come from AvatarData, so an avatar wearing nothing still has a
+        /// head and looks, from outside, like a spawn that half worked.
         /// </summary>
         /// <summary>
-        /// True when the avatar has lost the meshes it is supposed to be wearing.
-        ///
-        /// The hands are the sentinel because they cannot legitimately be empty: both entries in
-        /// the hands collection carry a mesh, and the prefab itself ships one, so a null there is
-        /// never a valid wardrobe choice the way an empty headTop or glasses slot is.
+        /// True when the avatar has lost the meshes it should be wearing. The hands are the
+        /// sentinel: both entries in that collection carry a mesh, so a null there is never a valid
+        /// choice, unlike an empty headTop or glasses slot.
         /// </summary>
         internal static bool HasLostVisuals(Avatar avatar)
         {

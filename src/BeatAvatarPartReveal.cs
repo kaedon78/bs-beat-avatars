@@ -7,21 +7,14 @@ namespace BeatAvatars
     /// <summary>
     /// Turns on the head parts the avatar prefabs ship switched off.
     ///
-    /// Measured 2026-08-31 across all three prefabs reachable through InstantiateAvatar
-    /// (BeatAvatar, BeatAvatarResults, BeatAvatarHologram): Glasses, Mouth and FacialHair are
-    /// inactive in the prefab itself, before any visual data is applied.
-    /// <c>BeatAvatarVisualController.UpdateAvatarVisual</c> assigns their mesh or sprite anyway and
-    /// never activates them, and there is no SetActive call anywhere in BeatSaber.BeatAvatarSDK --
-    /// so nothing the game does could ever make them render. They are populated and invisible.
+    /// Glasses, Mouth and FacialHair are inactive in every prefab reachable through
+    /// InstantiateAvatar. UpdateAvatarVisual fills their mesh or sprite anyway and never activates
+    /// them, and nothing in BeatSaber.BeatAvatarSDK calls SetActive, so they are populated and
+    /// permanently invisible.
     ///
-    /// The test is "did the visual update put anything in it", not "is the saved id the string
-    /// None". Both agree today -- the None entries in the glasses and facial-hair collections carry
-    /// null meshes -- but the mesh is the thing that decides whether there is anything to draw, and
-    /// it stays right if a future version adds an id that resolves to nothing.
-    ///
-    /// Mouth is handled by the same rule and stays off as a result: all twelve entries in the mouth
-    /// collection have a null sprite in 1.45.0, so there is no mouth art to reveal. If a later
-    /// version ships some, this starts working without a code change.
+    /// The test is whether the visual update put anything in the slot, not whether the saved id is
+    /// "None" -- the mesh is what decides if there is anything to draw. Mouth stays off under that
+    /// same rule, because every entry in the mouth collection has a null sprite.
     /// </summary>
     internal sealed class BeatAvatarPartReveal : MonoBehaviour
     {
