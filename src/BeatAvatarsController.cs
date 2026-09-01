@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Reflection;
 using BeatSaber.AvatarCore;
 using BeatSaber.BeatAvatarSDK;
 using BeatAvatarSDK = BeatSaber.BeatAvatarSDK;
@@ -39,6 +40,9 @@ namespace BeatAvatars
         private const float kVisualRecoveryCooldown = 5f;
         private const int kMaxVisualRecoveries = 2;
 
+        /// <summary>The avatar system to ask the collection for. Same id on 1.40.5 and 1.45.0.</summary>
+        private const string kAvatarSystemId = "BeatAvatarSystem";
+
         /// <summary>
         /// What the shared parts model resolves the player's own ids to -- the question a respawn
         /// cannot answer, since a model handing out empty parts makes every avatar built from it
@@ -66,6 +70,41 @@ namespace BeatAvatars
                  + " livePartsHandsCount=" + (liveParts == null ? -1 : liveParts.handsCollection.count);
         }
 
+        /// <summary>
+        /// Whatever the collection actually holds, read reflectively. The id it is keyed by is the
+        /// one thing a stall here cannot tell us, and the type exposes no public enumerator.
+        /// </summary>
+        private string DescribeCollection()
+        {
+            if (Collection == null) return "null";
+
+            try
+            {
+                var parts = new System.Collections.Generic.List<string>();
+
+                foreach (FieldInfo field in Collection.GetType()
+                             .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    object value = field.GetValue(Collection);
+                    if (value is System.Collections.IEnumerable items && !(value is string))
+                    {
+                        foreach (object item in items)
+                            parts.Add(field.Name + "[" + (item == null ? "null" : item.ToString()) + "]");
+                    }
+                    else
+                    {
+                        parts.Add(field.Name + "=" + (value == null ? "null" : value.ToString()));
+                    }
+                }
+
+                return parts.Count == 0 ? "(no fields)" : string.Join(", ", parts.ToArray());
+            }
+            catch (Exception ex)
+            {
+                return "unreadable: " + ex.Message;
+            }
+        }
+
         private const int kAlwaysVisibleMask = 1 << 10;
         private const int kOnlyInThirdPersonMask = 1 << 3;
 
@@ -84,6 +123,8 @@ namespace BeatAvatars
             // resolving from the project container returns null forever. Scan the contexts instead;
             // a child container resolves everything its parents bind, so whichever one answers is
             // also a container the avatar prefab can be injected with.
+            Plugin.Log.Info("Looking for the avatar system.");
+
             var waited = 0f;
             while (Collection == null)
             {
@@ -111,11 +152,25 @@ namespace BeatAvatars
                     Plugin.Log.Warn("Still waiting for the avatar system after " + waited + "s.");
             }
 
+            Plugin.Log.Info("Avatar system collection resolved after " + waited + "s.");
+
             while (AvatarSystem == null)
             {
-                AvatarSystem = Collection.GetAvatarSystem("BeatAvatarSystem");
-                if (AvatarSystem == null) yield return new WaitForSeconds(0.5f);
+                AvatarSystem = Collection.GetAvatarSystem(kAvatarSystemId);
+                if (AvatarSystem != null) break;
+
+                // The same rule the loop above follows: never spin in silence. Without this the
+                // whole mod stalls here with no output at all, which reads as "the plugin did not
+                // load" -- a different fault needing a different fix.
+                if (waited % 15f == 0f)
+                    Plugin.Log.Warn("No \"" + kAvatarSystemId + "\" avatar system after " + waited
+                        + "s. Collection holds: " + DescribeCollection());
+
+                yield return new WaitForSeconds(0.5f);
+                waited += 0.5f;
             }
+
+            Plugin.Log.Info("Avatar system \"" + kAvatarSystemId + "\" ready after " + waited + "s.");
 
             while (true)
             {
@@ -263,7 +318,7 @@ namespace BeatAvatars
             {
                 _container = live;
                 Collection = live.TryResolve<AvatarSystemCollection>();
-                AvatarSystem = Collection?.GetAvatarSystem("BeatAvatarSystem");
+                AvatarSystem = Collection?.GetAvatarSystem(kAvatarSystemId);
             }
 
             return AvatarSystem != null;
