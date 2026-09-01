@@ -1,6 +1,6 @@
 # Beat Avatars
 
-First-person body presence in Beat Saber using **the game's own Beat Avatar** — the character you
+Your avatar as your body in Beat Saber, using **the game's own Beat Avatar** — the character you
 already made in the avatar editor and that other players see in multiplayer — instead of a custom
 model.
 

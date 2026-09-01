@@ -4,7 +4,7 @@
   "name": "BeatAvatars",
   "author": "Kaedon",
   "version": "1.0.0",
-  "description": "First-person body presence using the game's own Beat Avatar, instead of a custom model.",
+  "description": "Your avatar as your in-game body, using the game's own Beat Avatar instead of a custom model.",
   "gameVersion": "1.40.5",
   "dependsOn": {
     "BSIPA": "^4.3.0",
