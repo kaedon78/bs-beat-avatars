@@ -1,7 +1,7 @@
 # BeatAvatars
 
 First-person body presence using the **base game's own Beat Avatar** instead of a custom model.
-Source in [src/BeatAvatars](../src/BeatAvatars). Targets 1.45.0.
+Source in [src/](src/). Targets 1.45.0.
 
 Written from scratch rather than by porting CustomAvatars, which targets 1.41.1 and depends on
 FinalIK and DynamicBone. The Beat Avatar has no IK, no bones beyond four, no DynamicBone and no
@@ -37,6 +37,53 @@ whole duration because of this — hence the "never wait in silence" logging in 
 
 Scan `Zenject.Context` components instead and take whichever container answers; a child container
 resolves everything its parents bind.
+
+### A stale container still resolves, and hands back wreckage
+
+The sequel to the above, and the most expensive thing in this file.
+
+Having found the right container, the mod cached it. Applying anything in the game's own Settings
+rebuilds `AppCoreSceneContext` — and **a dead container still resolves**. It does not throw, does
+not return null, and does not complain. It hands back an `AvatarPartsModel` built from destroyed
+ScriptableObjects: the arrays keep their lengths, so every count looks right; every `id` reads
+null, so every lookup misses; every mesh lands null.
+
+The result is an avatar that spawns, tracks the player perfectly, sits on the correct layers, is
+active and unscaled — and wears nothing. Only the head is left, because that one mesh is baked into
+the prefab while head-top, clothes and hands all come from `AvatarData`. From inside you see almost
+nothing, since the head is culled from your own view; in the mirror, which reflects both layers, you
+see a bare head.
+
+**Re-resolve the container on every spawn.** `SpawnAsync` does, and takes the collection and avatar
+system with it.
+
+Four hypotheses died before this one, each killed by measurement rather than argument, and the
+eliminations are what made it findable:
+
+| suspected | how it died |
+|---|---|
+| camera / mirror / URP layer masks | byte-identical before and after the apply |
+| a layer-reset detector | blind exactly here: the apply respawns the avatar, and it treated the first pass after a spawn as set-up |
+| the avatar instance | seven reloads, every one empty |
+| released assets | the collections were full; it was the ids that were gone |
+
+Two operator observations did more than any of that: **"only the head stays"** pointed at meshes
+rather than layers, and **"in the mirror, not my own view"** unified two symptoms that looked like
+separate faults.
+
+### Container lifetime is the recurring bug in this mod
+
+Three separate failures, one shape — something captured once from a Zenject container and never
+revisited:
+
+* the **menu button**, lost because BSML binds `MenuButtons` into the menu container, which is
+  rebuilt whenever settings are applied;
+* the **flow coordinator**, destroyed with the scene it was created in;
+* the **avatar's container**, above.
+
+Each is patched individually and each patch is small, but the pattern is the argument for taking a
+SiraUtil dependency: `Zenjector.Install(Location.App, ...)` would make the whole class impossible
+and delete the context scanning, the retry burst and the `Instance` static along with it.
 
 ### The prefabs ship on layer 0, and there are only three of them
 
@@ -182,12 +229,15 @@ head also decouples it from the body, which `UpdateBodyPosition` derives from th
 
 No own head from inside; scale correct; Camera2 third-person view shows the head; 360° maps show
 correct views; gameplay pose tracking through a full song; mirror hands correct; settings panel
-functional, including both vertical sliders.
+functional, including both vertical sliders; the avatar keeps its clothes and hands across a
+settings apply, which is the case that produced the stale-container finding.
 
 ## Not yet done
 
-* Layout of the per-slider undo column is unconfirmed — a slider and a button side by side is the
-  arrangement this repo has lost attempts to before (see the BSML width trap in CLAUDE.md).
+* Take the SiraUtil dependency and delete the three container workarounds, as above. The single
+  largest cleanup available.
+* Layout of the per-slider undo column is unconfirmed — a slider and a button side by side is an
+  arrangement that has collapsed labels before in this game's UI.
 * The **gameplay** hand anchor has never been named in a spawn line; all panel runs stayed in the
   menu. If it ever logs `ok(no anchor)`, the fallback is firing.
 * `hideHeadInFirstPerson` only takes effect on a scene change.
