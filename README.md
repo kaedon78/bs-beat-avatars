@@ -1,8 +1,8 @@
 # Beat Avatars
 
-Your avatar as your body in Beat Saber, using **the game's own Beat Avatar** — the character you
-already made in the avatar editor and that other players see in multiplayer — instead of a custom
-model.
+Uses **the game's own Beat Avatar** as your in-game body — the character you already made in the
+avatar editor and that other players see in multiplayer — adding settings for the size and position
+of the head, body and hands.
 
 ![built for 1.45.0](https://img.shields.io/badge/Beat%20Saber-1.45.0-blue)
 
