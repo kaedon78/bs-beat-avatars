@@ -59,6 +59,10 @@ A camera's culling mask is not the only filter. The `ScriptableRenderer` ANDs it
 `opaqueLayerMask` and `transparentLayerMask` on top, so a layer missing from those renders on **no
 camera**, however that camera is configured — and no camera-level check can see it.
 
+The masks are reached by reflection rather than by naming URP types, so the same source compiles
+against pre-Unity-6 games that ship no URP assembly. There, `currentRenderPipeline` is null and the
+whole thing is inert.
+
 1.45.0 omits layer 3 from both, which is the layer CustomAvatars and Camera2 use for
 "third person only". Full write-up in [migrations/urp-layer-masks.md](migrations/urp-layer-masks.md).
 

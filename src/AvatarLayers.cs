@@ -1,9 +1,9 @@
+using System;
 using System.Reflection;
 using BeatSaber.AvatarCore;
 using BeatSaber.BeatAvatarSDK;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
 
 namespace BeatAvatars
 {
@@ -30,8 +30,10 @@ namespace BeatAvatars
         internal const int kOnlyInThirdPersonMask = 1 << kOnlyInThirdPerson;
         internal const int kMirrorMask = 1 << kMirror;
 
-        private static readonly FieldInfo kRendererDataListField = typeof(UniversalRenderPipelineAsset)
-            .GetField("m_RendererDataList", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static FieldInfo _rendererDataListField;
+        private static PropertyInfo _opaqueMaskProperty;
+        private static PropertyInfo _transparentMaskProperty;
+        private static Type _rendererDataType;
 
         private static readonly FieldInfo kReflectLayersField = typeof(MirrorRendererSO)
             .GetField("_reflectLayers", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -103,40 +105,78 @@ namespace BeatAvatars
         /// <returns>True when the renderer's masks were missing our layers and had to be fixed.</returns>
         internal static bool EnsureRenderPipelineLayers()
         {
-            var asset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+            // Every URP type here is reached by reflection rather than named. Builds before
+            // Unity 6 run the built-in pipeline and ship no URP assembly at all, so a compile-time
+            // reference is one those games cannot satisfy -- and currentRenderPipeline is null
+            // there, which is the correct answer rather than a failure.
+            RenderPipelineAsset asset = GraphicsSettings.currentRenderPipeline;
             if (asset == null) return false;
 
-            // The public rendererDataList returns ReadOnlySpan<T>, which net472 has no definition
-            // for, so read the backing array field instead.
-            var dataList = kRendererDataListField?.GetValue(asset) as ScriptableRendererData[];
+            if (_rendererDataListField == null)
+            {
+                // The public rendererDataList returns ReadOnlySpan<T>, which net472 has no
+                // definition for, so read the backing array field instead.
+                _rendererDataListField = FindPrivateField(asset.GetType(), "m_RendererDataList");
+                if (_rendererDataListField == null) return false;
+            }
+
+            // ScriptableRendererData is a class, so its array casts to object[] directly.
+            var dataList = _rendererDataListField.GetValue(asset) as object[];
             if (dataList == null) return false;
 
             var changed = false;
 
-            foreach (ScriptableRendererData data in dataList)
+            foreach (object data in dataList)
             {
-                var universal = data as UniversalRendererData;
-                if (universal == null) continue;
+                if (data == null || !ResolveMaskProperties(data.GetType())) continue;
 
-                int opaque = universal.opaqueLayerMask.value;
+                int opaque = ((LayerMask)_opaqueMaskProperty.GetValue(data, null)).value;
                 LastOpaqueMask = opaque;
-                int transparent = universal.transparentLayerMask.value;
+                int transparent = ((LayerMask)_transparentMaskProperty.GetValue(data, null)).value;
                 int wanted = kAlwaysVisibleMask | kOnlyInThirdPersonMask;
 
                 if ((opaque & wanted) != wanted)
                 {
-                    universal.opaqueLayerMask = opaque | wanted;
+                    _opaqueMaskProperty.SetValue(data, (LayerMask)(opaque | wanted), null);
                     changed = true;
                 }
 
                 if ((transparent & wanted) != wanted)
                 {
-                    universal.transparentLayerMask = transparent | wanted;
+                    _transparentMaskProperty.SetValue(data, (LayerMask)(transparent | wanted), null);
                     changed = true;
                 }
             }
 
             return changed;
+        }
+
+        /// <summary>
+        /// Finds a private instance field, walking up the hierarchy. GetField does not search base
+        /// types for non-public members, so a derived pipeline asset would otherwise report none.
+        /// </summary>
+        private static FieldInfo FindPrivateField(Type type, string name)
+        {
+            for (Type t = type; t != null; t = t.BaseType)
+            {
+                FieldInfo field = t.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
+                if (field != null) return field;
+            }
+
+            return null;
+        }
+
+        /// <summary>Resolves and caches both mask properties for a renderer data type.</summary>
+        private static bool ResolveMaskProperties(Type dataType)
+        {
+            if (!ReferenceEquals(dataType, _rendererDataType))
+            {
+                _rendererDataType = dataType;
+                _opaqueMaskProperty = dataType.GetProperty("opaqueLayerMask");
+                _transparentMaskProperty = dataType.GetProperty("transparentLayerMask");
+            }
+
+            return _opaqueMaskProperty != null && _transparentMaskProperty != null;
         }
 
         internal static int AddToMirrorMask()
