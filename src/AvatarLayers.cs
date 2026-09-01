@@ -34,6 +34,7 @@ namespace BeatAvatars
         private static PropertyInfo _opaqueMaskProperty;
         private static PropertyInfo _transparentMaskProperty;
         private static Type _rendererDataType;
+        private static bool _reportedPipeline;
 
         private static readonly FieldInfo kReflectLayersField = typeof(MirrorRendererSO)
             .GetField("_reflectLayers", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -110,25 +111,46 @@ namespace BeatAvatars
             // reference is one those games cannot satisfy -- and currentRenderPipeline is null
             // there, which is the correct answer rather than a failure.
             RenderPipelineAsset asset = GraphicsSettings.currentRenderPipeline;
-            if (asset == null) return false;
+            if (asset == null)
+            {
+                ReportOnce("no scriptable render pipeline; the camera's culling mask is the only filter.");
+                return false;
+            }
 
             if (_rendererDataListField == null)
             {
                 // The public rendererDataList returns ReadOnlySpan<T>, which net472 has no
                 // definition for, so read the backing array field instead.
                 _rendererDataListField = FindPrivateField(asset.GetType(), "m_RendererDataList");
-                if (_rendererDataListField == null) return false;
+                if (_rendererDataListField == null)
+                {
+                    ReportOnce("no m_RendererDataList on " + asset.GetType().Name + "; layer "
+                        + kOnlyInThirdPerson + " cannot be added, so the head will render on NO camera.", true);
+                    return false;
+                }
             }
 
             // ScriptableRendererData is a class, so its array casts to object[] directly.
             var dataList = _rendererDataListField.GetValue(asset) as object[];
-            if (dataList == null) return false;
+            if (dataList == null)
+            {
+                ReportOnce("m_RendererDataList is not an object[]; layer masks left alone.", true);
+                return false;
+            }
 
             var changed = false;
 
             foreach (object data in dataList)
             {
-                if (data == null || !ResolveMaskProperties(data.GetType())) continue;
+                if (data == null) continue;
+
+                if (!ResolveMaskProperties(data.GetType()))
+                {
+                    ReportOnce("no opaque/transparent layer mask on " + data.GetType().Name
+                        + "; layer " + kOnlyInThirdPerson + " cannot be added, so the head will render "
+                        + "on NO camera.", true);
+                    continue;
+                }
 
                 int opaque = ((LayerMask)_opaqueMaskProperty.GetValue(data, null)).value;
                 LastOpaqueMask = opaque;
@@ -146,9 +168,31 @@ namespace BeatAvatars
                     _transparentMaskProperty.SetValue(data, (LayerMask)(transparent | wanted), null);
                     changed = true;
                 }
+
+                ReportOnce(data.GetType().Name + " opaque 0x" + opaque.ToString("X8") + " -> 0x"
+                    + (opaque | wanted).ToString("X8") + ", transparent 0x" + transparent.ToString("X8")
+                    + " -> 0x" + (transparent | wanted).ToString("X8"));
             }
 
             return changed;
+        }
+
+        /// <summary>
+        /// Says what the render pipeline actually did with our layers, exactly once per process.
+        ///
+        /// Every URP type here is reached by reflection, so a lookup that silently returns nothing
+        /// is indistinguishable from a pipeline that needed no fixing -- and the two look identical
+        /// from inside the headset, because the head is culled from the player's own view either
+        /// way. The only visible symptom of the failure is the head missing from every OTHER
+        /// camera, which nobody checks by accident.
+        /// </summary>
+        private static void ReportOnce(string what, bool broken = false)
+        {
+            if (_reportedPipeline) return;
+            _reportedPipeline = true;
+
+            if (broken) Plugin.Log.Warn("Render pipeline: " + what);
+            else Plugin.Log.Info("Render pipeline: " + what);
         }
 
         /// <summary>
