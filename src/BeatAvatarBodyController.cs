@@ -216,12 +216,7 @@ namespace BeatAvatarBody
                 CurrentAvatar = avatar;
                 SpawnedUnder = space;
 
-                // One line per scene, carrying what a bug report actually needs: whether the rig
-                // resolved. A frozen avatar and a working one look identical in a screenshot.
-                Plugin.Log.Info("Avatar spawned in " + SceneManager.GetActiveScene().name
-                    + " (head " + (poseProvider.head != null ? "ok" : "MISSING")
-                    + ", hands " + (poseProvider.leftHand != null ? "ok" : "MISSING")
-                    + "/" + (poseProvider.rightHand != null ? "ok" : "MISSING") + ")");
+                StartCoroutine(ReportRigWhenSettled(poseProvider, SceneManager.GetActiveScene().name));
             }
             catch (Exception ex)
             {
@@ -231,6 +226,35 @@ namespace BeatAvatarBody
             {
                 _spawning = false;
             }
+        }
+
+        /// <summary>
+        /// One line per scene, once the rig has had a chance to settle.
+        ///
+        /// Deliberately not logged at spawn. The spawn instant is the worst moment to judge the
+        /// rig: in VR the scene is still building and the controllers do not exist yet, so a
+        /// spawn-time reading says MISSING for hands that resolve a tick later and are fine. That
+        /// reads as a fault when nothing is wrong, and buries the case where something is.
+        /// EnsureRig runs twice a second, so three seconds is many chances.
+        /// </summary>
+        private IEnumerator ReportRigWhenSettled(LocalPlayerPoseProvider provider, string scene)
+        {
+            yield return new WaitForSeconds(3f);
+
+            // A scene change during the wait replaces the provider; that spawn reports for itself.
+            if (provider == null || _poseProvider != provider) yield break;
+
+            if (provider.head != null && provider.leftHand != null && provider.rightHand != null)
+            {
+                Plugin.Log.Info("Avatar tracking in " + scene + ": head and both hands resolved.");
+                yield break;
+            }
+
+            Plugin.Log.Warn("Avatar tracking in " + scene + " is incomplete: head "
+                + (provider.head != null ? "ok" : "MISSING") + ", hands "
+                + (provider.leftHand != null ? "ok" : "MISSING") + "/"
+                + (provider.rightHand != null ? "ok" : "MISSING")
+                + ". The avatar will not follow you properly.");
         }
 
         private void HandleVisualDataChanged(MultiplayerAvatarsData data)
