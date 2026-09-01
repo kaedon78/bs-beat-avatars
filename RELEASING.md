@@ -84,8 +84,15 @@ LICENSE, byte for byte.
 
 ## Applied here
 
-| version | game | tag |
-|---|---|---|
-| 1.0.0 | 1.45.0 | `v1.0.0-bs1.45.0` on `BS_1.45.0` |
-| 1.0.1 | 1.45.0 | `v1.0.1-bs1.45.0` on `BS_1.45.0` |
-| 1.0.1 | 1.40.5 | `v1.0.1-bs1.40.5` on `BS_1.40.5` |
+| version | game | tag | release |
+|---|---|---|---|
+| 1.0.0 | 1.45.0 | `v1.0.0-bs1.45.0` on `BS_1.45.0` | removed, superseded |
+| 1.0.1 | 1.45.0 | `v1.0.1-bs1.45.0` on `BS_1.45.0` | latest |
+| 1.0.1 | 1.40.5 | `v1.0.1-bs1.40.5` on `BS_1.40.5` | |
+
+The 1.0.0 tag stays although its release is gone: a tag that others could have
+pulled is not reused or deleted, and it still records which commit shipped.
+
+GitHub marks the newest release latest by publish time, which would point at
+whichever game version was cut second. The current version is marked latest
+explicitly, since that is the one most visitors want.
