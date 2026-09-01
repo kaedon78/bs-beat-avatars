@@ -109,17 +109,6 @@
       <Private>false</Private>
     </Reference>
 
-    <!-- UniversalRendererData.opaqueLayerMask: URP filters layers a second time, after the
-         camera's culling mask. -->
-    <Reference Include="Unity.RenderPipelines.Universal.Runtime">
-      <HintPath>$(GameRefDir)Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Unity.RenderPipelines.Core.Runtime">
-      <HintPath>$(GameRefDir)Unity.RenderPipelines.Core.Runtime.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-
     <Reference Include="Zenject">
       <HintPath>$(GameRefDir)Zenject.dll</HintPath>
       <Private>false</Private>

@@ -260,7 +260,7 @@ namespace BeatAvatars.UI
             NotifyPropertyChanged(nameof(canUndoAny));
         }
 
-        public override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             // Snapshot BEFORE base, so the widgets bind against a snapshot that already exists and
             // every undo button starts out disabled rather than flickering enabled for a frame.
@@ -272,7 +272,7 @@ namespace BeatAvatars.UI
             BeatAvatarsController.Instance?.ShowPreviewAsync();
         }
 
-        public override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
+        protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
         {
             // Saving here rather than on every slider change: a drag raises a value change per
             // frame, and rewriting the file at that rate is real disk traffic for no benefit.

@@ -4,7 +4,7 @@ What a maintainer needs to know about the game's avatar system, and the rules th
 because of it. Every entry here is something the code depends on and that reading the code alone
 will not tell you.
 
-Source in [src/](src/). Targets 1.45.0.
+Source in [src/](src/). Targets 1.40.5; see `BS_1.45.0` for the newer game.
 
 ## The rig
 
@@ -58,6 +58,11 @@ would make the whole class impossible and delete the context scan, the retry bur
 A camera's culling mask is not the only filter. The `ScriptableRenderer` ANDs its own
 `opaqueLayerMask` and `transparentLayerMask` on top, so a layer missing from those renders on **no
 camera**, however that camera is configured — and no camera-level check can see it.
+
+**1.40.5 does not run URP at all** -- it is the built-in pipeline, ships no
+`Unity.RenderPipelines.*` assembly, and `GraphicsSettings.currentRenderPipeline` is null. The fix
+below is inert here and is reached only by reflection, so this branch keeps it without the
+reference. It matters from Unity 6 onward.
 
 1.45.0 omits layer 3 from both, which is the layer CustomAvatars and Camera2 use for
 "third person only". Full write-up in [migrations/urp-layer-masks.md](migrations/urp-layer-masks.md).

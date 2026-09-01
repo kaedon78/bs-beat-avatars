@@ -86,3 +86,4 @@ LICENSE, byte for byte.
 | version | game | tag |
 |---|---|---|
 | 1.0.0 | 1.45.0 | `v1.0.0-bs1.45.0` on `BS_1.45.0` |
+| 1.0.0 | 1.40.5 | *(unreleased)* on `BS_1.40.5` |

@@ -41,16 +41,9 @@ namespace BeatAvatars
         {
             var provider = new LocalAvatarVisualProvider(system, avatarDataModel, await FetchAsync(system));
 
-            system.avatarDidChangeEvent += provider.HandleSystemAvatarDidChange;
-
             if (avatarDataModel != null)
             {
                 avatarDataModel.didChangeAvatarDataEvent += provider.HandleAvatarDataChanged;
-
-                // Also the SAVE event: the change event comes off the avatarData setter and only
-                // fires when the object is replaced, so an editor that mutates in place and saves
-                // would never raise it. Between the two, either commit path is caught.
-                avatarDataModel.didSaveAvatarDataEvent += provider.HandleAvatarDataSaved;
             }
             else
             {
@@ -95,43 +88,12 @@ namespace BeatAvatars
             }
         }
 
-        /// <summary>
-        /// Reads the model back on save. Unlike the change event this carries no payload, so it
-        /// goes the long way round through the system.
-        /// </summary>
-        private async void HandleAvatarDataSaved()
-        {
-            try
-            {
-                _data = await FetchAsync(_system);
-                visualDataDidChangeEvent?.Invoke(_data);
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.Error("Visual refresh failed: " + ex);
-            }
-        }
-
-        private async void HandleSystemAvatarDidChange()
-        {
-            try
-            {
-                _data = await FetchAsync(_system);
-                visualDataDidChangeEvent?.Invoke(_data);
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.Error("Visual refresh failed: " + ex);
-            }
-        }
 
         public void Dispose()
         {
-            _system.avatarDidChangeEvent -= HandleSystemAvatarDidChange;
             if (_avatarDataModel != null)
             {
                 _avatarDataModel.didChangeAvatarDataEvent -= HandleAvatarDataChanged;
-                _avatarDataModel.didSaveAvatarDataEvent -= HandleAvatarDataSaved;
             }
         }
     }

@@ -4,7 +4,7 @@ First-person body presence in Beat Saber using **the game's own Beat Avatar** �
 already made in the avatar editor and that other players see in multiplayer — instead of a custom
 model.
 
-![built for 1.45.0](https://img.shields.io/badge/Beat%20Saber-1.45.0-blue)
+![built for 1.40.5](https://img.shields.io/badge/Beat%20Saber-1.40.5-blue)
 
 ## What it does
 
@@ -20,7 +20,7 @@ dependency-light alternative for people who just want to see the body they alrea
 
 ## Requirements
 
-* Beat Saber 1.45.0 with BSIPA
+* Beat Saber 1.40.5 with BSIPA
 * [BeatSaberMarkupLanguage](https://github.com/monkeymanboy/BeatSaberMarkupLanguage) (BSML) — for
   the settings panel
 
