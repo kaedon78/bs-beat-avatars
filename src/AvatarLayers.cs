@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 namespace BeatAvatars
 {
     /// <summary>
-    /// Layer bookkeeping, which is where first-person body presence lives or dies: this is a
+    /// Layer bookkeeping, which is where the avatar as your own body lives or dies: this is a
     /// multiplayer avatar, and nothing about it expects to be inside the local player's head.
     ///
     /// The numbers are the game's own -- 10 is "Avatar", 3 and 7 are unnamed and free -- and match

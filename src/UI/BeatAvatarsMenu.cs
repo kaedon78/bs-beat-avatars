@@ -44,7 +44,7 @@ namespace BeatAvatars.UI
         {
             _menuButton = new MenuButton(
                 "Beat Avatars",
-                "Size and grip of your first-person body.",
+                "Size and grip of your avatar.",
                 ShowPanel);
 
             SceneManager.sceneLoaded += HandleSceneLoaded;

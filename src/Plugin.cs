@@ -5,7 +5,7 @@ using IPALogger = IPA.Logging.Logger;
 namespace BeatAvatars
 {
     /// <summary>
-    /// First-person body presence built on the game's OWN avatar system, not on custom models.
+    /// Your avatar as your in-game body, built on the game's OWN avatar system, not on custom models.
     ///
     /// Three small pieces bolted onto public API that already exists:
     ///   * <see cref="BeatSaber.AvatarCore.IAvatarSystem.InstantiateAvatar"/> spawns the same
