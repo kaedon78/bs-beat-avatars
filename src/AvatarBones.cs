@@ -68,6 +68,52 @@ namespace BeatAvatars
         /// mirror, so this is left uncompensated rather than made surprising in the other
         /// direction.
         /// </summary>
+        /// <summary>
+        /// What the visual controller currently has in its mesh slots.
+        ///
+        /// The head sphere is a fixed mesh on the prefab; head-top, clothes and hands are assigned
+        /// from AvatarData by UpdateAvatarVisual. So "only the head is left" and "the AvatarData
+        /// driven meshes went null" predict exactly the same picture, and this tells them apart.
+        /// </summary>
+        /// <summary>
+        /// True when the avatar has lost the meshes it is supposed to be wearing.
+        ///
+        /// The hands are the sentinel because they cannot legitimately be empty: both entries in
+        /// the hands collection carry a mesh, and the prefab itself ships one, so a null there is
+        /// never a valid wardrobe choice the way an empty headTop or glasses slot is.
+        /// </summary>
+        internal static bool HasLostVisuals(Avatar avatar)
+        {
+            var visual = avatar == null
+                ? null
+                : avatar.GetComponentInChildren<BeatAvatarVisualController>(true);
+            if (visual == null) return false;
+
+            return MeshName(visual, "_leftHandsHairMeshFilter") == "NULL";
+        }
+
+        internal static string DescribeMeshes(Avatar avatar)
+        {
+            var visual = avatar == null
+                ? null
+                : avatar.GetComponentInChildren<BeatAvatarVisualController>(true);
+            if (visual == null) return "meshes=no visual controller";
+
+            return "meshes headTop=" + MeshName(visual, "_headTopMeshFilter")
+                 + " clothes=" + MeshName(visual, "_bodyMeshFilter")
+                 + " hands=" + MeshName(visual, "_leftHandsHairMeshFilter");
+        }
+
+        private static string MeshName(BeatAvatarVisualController visual, string fieldName)
+        {
+            FieldInfo field = typeof(BeatAvatarVisualController)
+                .GetField(fieldName, kNonPublicInstance);
+
+            var filter = field?.GetValue(visual) as MeshFilter;
+            if (filter == null) return "<no field>";
+            return filter.sharedMesh == null ? "NULL" : filter.sharedMesh.name;
+        }
+
         internal static void SetVerticalOffset(Transform bone, float offset)
         {
             if (bone == null || bone.childCount == 0) return;

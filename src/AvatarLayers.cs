@@ -74,12 +74,17 @@ namespace BeatAvatars
         /// the one you must not show a head to. Everything else (Camera2 rigs, the spectator
         /// camera, fpfc) wants the head back.
         /// </summary>
-        internal static void ApplyCameraMask(Camera camera, bool firstPerson)
+        /// <returns>True when the camera's mask was wrong and had to be corrected.</returns>
+        internal static bool ApplyCameraMask(Camera camera, bool firstPerson)
         {
-            var mask = camera.cullingMask | kAlwaysVisibleMask;
+            int mask = camera.cullingMask | kAlwaysVisibleMask;
             if (firstPerson) mask &= ~kOnlyInThirdPersonMask;
             else mask |= kOnlyInThirdPersonMask;
+
+            if (mask == camera.cullingMask) return false;
+
             camera.cullingMask = mask;
+            return true;
         }
 
         /// <summary>
@@ -100,15 +105,21 @@ namespace BeatAvatars
         ///
         /// This is global state for the process lifetime, and idempotent: it only ever adds layers.
         /// </summary>
-        internal static void EnsureRenderPipelineLayers()
+        /// <summary>The renderer opaque mask as last observed, for diagnosis of a reset.</summary>
+        internal static int LastOpaqueMask { get; private set; }
+
+        /// <returns>True when the renderer's masks were missing our layers and had to be fixed.</returns>
+        internal static bool EnsureRenderPipelineLayers()
         {
             var asset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
-            if (asset == null) return;
+            if (asset == null) return false;
 
             // The public rendererDataList returns ReadOnlySpan<T>, which net472 has no definition
             // for, so read the backing array field instead.
             var dataList = kRendererDataListField?.GetValue(asset) as ScriptableRendererData[];
-            if (dataList == null) return;
+            if (dataList == null) return false;
+
+            var changed = false;
 
             foreach (ScriptableRendererData data in dataList)
             {
@@ -116,12 +127,24 @@ namespace BeatAvatars
                 if (universal == null) continue;
 
                 int opaque = universal.opaqueLayerMask.value;
+                LastOpaqueMask = opaque;
                 int transparent = universal.transparentLayerMask.value;
                 int wanted = kAlwaysVisibleMask | kOnlyInThirdPersonMask;
 
-                if ((opaque & wanted) != wanted) universal.opaqueLayerMask = opaque | wanted;
-                if ((transparent & wanted) != wanted) universal.transparentLayerMask = transparent | wanted;
+                if ((opaque & wanted) != wanted)
+                {
+                    universal.opaqueLayerMask = opaque | wanted;
+                    changed = true;
+                }
+
+                if ((transparent & wanted) != wanted)
+                {
+                    universal.transparentLayerMask = transparent | wanted;
+                    changed = true;
+                }
             }
+
+            return changed;
         }
 
         internal static int AddToMirrorMask()
