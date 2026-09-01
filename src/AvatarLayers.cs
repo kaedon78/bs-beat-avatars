@@ -105,10 +105,10 @@ namespace BeatAvatars
         /// <returns>True when the renderer's masks were missing our layers and had to be fixed.</returns>
         internal static bool EnsureRenderPipelineLayers()
         {
-            // Every URP type here is reached by reflection rather than named. 1.40.5 runs the
-            // built-in pipeline and ships no URP assembly, so a compile-time reference would be
-            // one the older game cannot satisfy -- and currentRenderPipeline is null there, which
-            // is the correct answer rather than a failure.
+            // Every URP type here is reached by reflection rather than named. Builds before
+            // Unity 6 run the built-in pipeline and ship no URP assembly at all, so a compile-time
+            // reference is one those games cannot satisfy -- and currentRenderPipeline is null
+            // there, which is the correct answer rather than a failure.
             RenderPipelineAsset asset = GraphicsSettings.currentRenderPipeline;
             if (asset == null) return false;
 
