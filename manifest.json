@@ -4,7 +4,7 @@
   "name": "BeatAvatars",
   "author": "Kaedon",
   "version": "1.0.1",
-  "description": "Your avatar as your in-game body, using the game's own Beat Avatar instead of a custom model.",
+  "description": "Uses the game's own Beat Avatar as your in-game body, adding settings for the size and position of the head, body and hands.",
   "gameVersion": "1.40.5",
   "dependsOn": {
     "BSIPA": "^4.3.0",
