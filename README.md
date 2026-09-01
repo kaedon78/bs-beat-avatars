@@ -1,10 +1,11 @@
 # Beat Avatars
 
+[![Latest release](https://img.shields.io/github/v/release/kaedon78/bs-beat-avatars?label=latest%20release)](https://github.com/kaedon78/bs-beat-avatars/releases/latest)
+[![License: MIT](https://img.shields.io/github/license/kaedon78/bs-beat-avatars)](LICENSE)
+
 Uses **the game's own Beat Avatar** as your in-game body — the character you already made in the
 avatar editor and that other players see in multiplayer — adding settings for the size and position
 of the head, body and hands.
-
-![built for 1.40.5](https://img.shields.io/badge/Beat%20Saber-1.40.5-blue)
 
 ## What it does
 
