@@ -32,6 +32,7 @@ namespace BeatAvatars
         private LocalPlayerPoseProvider _poseProvider;
         private BeatAvatarPartReveal _partReveal;
         private PreviewAvatar _preview;
+        private float _previewYaw;
         private bool _spawning;
         private bool _layersSettled;
         private float _lastVisualRecovery = float.NegativeInfinity;
@@ -544,11 +545,20 @@ namespace BeatAvatars
                 _poseProvider.ResolveHands();
             }
 
-            _preview?.ApplyConfig(Config);
+            _preview?.ApplyConfig(Config, _previewYaw);
         }
 
         /// <summary>Spawns the tuning mirror. Idempotent.</summary>
-        internal async void ShowPreviewAsync()
+        /// <summary>
+        /// Degrees to the right of the settings panel to place the mirror. The panel is anchored in
+        /// the scene while the preview hangs off VRCenterAdjust, whose rotation is the player's own
+        /// room rotation -- so a fixed forward offset lands on top of the panel at some rotations
+        /// and beside it at others. Measuring from the panel makes the placement the same for
+        /// everyone.
+        /// </summary>
+        private const float kPreviewYawFromPanel = 40f;
+
+        internal async void ShowPreviewAsync(Transform panel = null)
         {
             if (_preview != null || AvatarSystem == null || _poseProvider == null) return;
 
@@ -568,16 +578,31 @@ namespace BeatAvatars
                     return;
                 }
 
+                _previewYaw = PreviewYaw(space, panel);
                 _preview = PreviewAvatar.Create(
                     avatar, _poseProvider, space,
                     BeatAvatarsConfig.Offset.ToVector3(Config.previewPosition),
-                    _visualProvider, Config);
+                    _previewYaw, _visualProvider, Config);
 
             }
             catch (Exception ex)
             {
                 Plugin.Log.Error("Preview failed: " + ex);
             }
+        }
+
+        /// <summary>
+        /// Which way to put the mirror, as a rotation about the player. Zero -- straight ahead in
+        /// room terms, the old behaviour -- when there is no panel to measure from.
+        /// </summary>
+        private static float PreviewYaw(Transform space, Transform panel)
+        {
+            if (space == null || panel == null) return 0f;
+
+            Vector3 local = space.InverseTransformPoint(panel.position);
+            if (local.x * local.x + local.z * local.z < 0.01f) return 0f;
+
+            return Mathf.Atan2(local.x, local.z) * Mathf.Rad2Deg + kPreviewYawFromPanel;
         }
 
         internal void HidePreview()

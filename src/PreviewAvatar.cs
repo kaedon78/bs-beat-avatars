@@ -39,13 +39,13 @@ namespace BeatAvatars
             LocalPlayerPoseProvider source,
             Transform space,
             Vector3 containerOffset,
+            float yaw,
             LocalAvatarVisualProvider visualProvider,
             BeatAvatarsConfig config)
         {
             var container = new GameObject("BeatAvatarsPreview");
             container.transform.SetParent(space, false);
-            container.transform.localPosition = containerOffset;
-            container.transform.localRotation = Quaternion.identity;
+            Place(container.transform, containerOffset, yaw);
             container.transform.localScale = new Vector3(1f, 1f, -1f);
 
             avatar.transform.SetParent(container.transform, false);
@@ -74,12 +74,26 @@ namespace BeatAvatars
             return new PreviewAvatar(container, avatar, reveal);
         }
 
-        internal void ApplyConfig(BeatAvatarsConfig config)
+        internal void ApplyConfig(BeatAvatarsConfig config, float yaw)
         {
             ApplyScales(_avatar, config);
 
             if (_container != null)
-                _container.transform.localPosition = BeatAvatarsConfig.Offset.ToVector3(config.previewPosition);
+                Place(_container.transform, BeatAvatarsConfig.Offset.ToVector3(config.previewPosition), yaw);
+        }
+
+        /// <summary>
+        /// Puts the mirror at the configured offset, swung round the player by <paramref name="yaw"/>.
+        ///
+        /// The container is rotated as well as moved, so its local XY plane -- the plane the
+        /// negative Z scale reflects across -- stays square to the player. The offset keeps its
+        /// meaning: z is how far away, x and y nudge it sideways and up within that frame.
+        /// </summary>
+        private static void Place(Transform container, Vector3 offset, float yaw)
+        {
+            Quaternion rotation = Quaternion.Euler(0f, yaw, 0f);
+            container.localPosition = rotation * offset;
+            container.localRotation = rotation;
         }
 
         private static void ApplyScales(Avatar avatar, BeatAvatarsConfig config)

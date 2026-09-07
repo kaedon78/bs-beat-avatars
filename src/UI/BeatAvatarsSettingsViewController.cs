@@ -269,7 +269,7 @@ namespace BeatAvatars.UI
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
 
             NotifyEverything();
-            BeatAvatarsController.Instance?.ShowPreviewAsync();
+            BeatAvatarsController.Instance?.ShowPreviewAsync(transform);
         }
 
         public override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
