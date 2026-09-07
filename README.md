@@ -71,6 +71,11 @@ The install needs BSIPA applied (for `IPA.Loader.dll` in `Beat Saber_Data\Manage
 present (`Plugins\BSML.dll`). The build fails with a message saying which is missing rather than
 emitting a DLL against whatever happened to be lying around.
 
+Output lands in `bin/Release/bs<game version>/`, named for the version in `manifest.json`. Each
+branch targets a different game, and a plugin built against the wrong one loads, warns once, and
+then fails at runtime with a VTable error, so the builds are kept apart rather than overwriting
+each other.
+
 ## Releasing
 
 Tag and branch naming is documented in [RELEASING.md](RELEASING.md), and is shared with the other
