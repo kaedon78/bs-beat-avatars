@@ -3,7 +3,7 @@
   "id": "BeatAvatars",
   "name": "BeatAvatars",
   "author": "Kaedon",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Uses the game's own Beat Avatar as your in-game body, adding settings for the size and position of the head, body and hands.",
   "gameVersion": "1.45.0",
   "dependsOn": {
