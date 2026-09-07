@@ -73,7 +73,7 @@ namespace BeatAvatars
         /// apparent mirror surface is at half this distance -- the container is negatively scaled
         /// in z, so a bone at local z lands at (container.z - z), a reflection about z/2.
         /// </summary>
-        public Offset previewPosition = new Offset { x = 0f, y = 0f, z = 1.6f };
+        public Offset previewPosition = new Offset { x = 0f, y = 0f, z = 2.0f };
 
         /// <summary>Plain x/y/z so the JSON stays readable; Vector3 serialises its derived properties too.</summary>
         internal sealed class Offset

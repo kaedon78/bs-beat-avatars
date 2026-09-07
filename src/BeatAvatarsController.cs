@@ -33,6 +33,8 @@ namespace BeatAvatars
         private BeatAvatarPartReveal _partReveal;
         private PreviewAvatar _preview;
         private float _previewYaw;
+        private bool _previewSpawning;
+        private bool _previewWanted;
         private bool _spawning;
         private bool _layersSettled;
         private float _lastVisualRecovery = float.NegativeInfinity;
@@ -560,7 +562,14 @@ namespace BeatAvatars
 
         internal async void ShowPreviewAsync(Transform panel = null)
         {
-            if (_preview != null || AvatarSystem == null || _poseProvider == null) return;
+            // _preview stays null for the whole of the await below, so it cannot be the only guard:
+            // a second call walks past it, both spawn, and only the later one is ever held. The
+            // earlier is unreachable and never disposed, which shows up as an extra avatar in
+            // third-person views for the rest of the scene.
+            if (_preview != null || _previewSpawning || AvatarSystem == null || _poseProvider == null) return;
+
+            _previewSpawning = true;
+            _previewWanted = true;
 
             try
             {
@@ -571,8 +580,9 @@ namespace BeatAvatars
                     AvatarDisplayContext.MultiplayerGameplay, 0, _container);
                 if (avatar == null) return;
 
-                // The scene can change while the Addressable loads.
-                if (SpawnedUnder != space || _poseProvider == null)
+                // The scene can change while the Addressable loads, and the panel can be closed:
+                // keeping an avatar nobody asked for any more leaks it just as surely.
+                if (!_previewWanted || SpawnedUnder != space || _poseProvider == null)
                 {
                     Destroy(avatar.gameObject);
                     return;
@@ -583,11 +593,14 @@ namespace BeatAvatars
                     avatar, _poseProvider, space,
                     BeatAvatarsConfig.Offset.ToVector3(Config.previewPosition),
                     _previewYaw, _visualProvider, Config);
-
             }
             catch (Exception ex)
             {
                 Plugin.Log.Error("Preview failed: " + ex);
+            }
+            finally
+            {
+                _previewSpawning = false;
             }
         }
 
@@ -607,6 +620,10 @@ namespace BeatAvatars
 
         internal void HidePreview()
         {
+            // Set even when there is nothing to dispose: a spawn may be mid-await, and this is what
+            // tells it not to keep what it is about to finish loading.
+            _previewWanted = false;
+
             if (_preview == null) return;
 
             _preview.Dispose();

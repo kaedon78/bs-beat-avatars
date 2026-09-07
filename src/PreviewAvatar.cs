@@ -83,17 +83,25 @@ namespace BeatAvatars
         }
 
         /// <summary>
+        /// Extra clockwise turn on the mirror itself, on top of the angle it sits at.
+        ///
+        /// Square to the player is not the same as facing them: the reflection is what is being
+        /// looked at, and a plane exactly perpendicular to the line between you shows it turned
+        /// slightly away once the mirror is off to one side.
+        /// </summary>
+        private const float kFacingAdjust = 15f;
+
+        /// <summary>
         /// Puts the mirror at the configured offset, swung round the player by <paramref name="yaw"/>.
         ///
         /// The container is rotated as well as moved, so its local XY plane -- the plane the
-        /// negative Z scale reflects across -- stays square to the player. The offset keeps its
-        /// meaning: z is how far away, x and y nudge it sideways and up within that frame.
+        /// negative Z scale reflects across -- stays roughly square to the player. The offset keeps
+        /// its meaning: z is how far away, x and y nudge it sideways and up within that frame.
         /// </summary>
         private static void Place(Transform container, Vector3 offset, float yaw)
         {
-            Quaternion rotation = Quaternion.Euler(0f, yaw, 0f);
-            container.localPosition = rotation * offset;
-            container.localRotation = rotation;
+            container.localPosition = Quaternion.Euler(0f, yaw, 0f) * offset;
+            container.localRotation = Quaternion.Euler(0f, yaw + kFacingAdjust, 0f);
         }
 
         private static void ApplyScales(Avatar avatar, BeatAvatarsConfig config)
