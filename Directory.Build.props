@@ -41,6 +41,23 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <!-- dotnet build without -c leaves this unset here, and it names the folder below. -->
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+
+    <!--
+      The game version the manifest declares, read out of it so there is no second place to keep in
+      step, and used to name the output folder: bin/Release/bs1.45.0/.
+
+      One repo builds for several game versions off different branches, and a shared bin/Release
+      holds whichever built last, so copying "the DLL" can hand you a plugin built against the
+      wrong game. BSIPA loads it, warns once, and it then fails at runtime with a VTable error,
+      which reads as a bug in the mod rather than as the wrong file. A named folder makes it
+      impossible to pick up the wrong one by accident.
+    -->
+    <ManifestGameVersion Condition="Exists('$(_RepoRoot)manifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(_RepoRoot)manifest.json')), '"gameVersion"\s*:\s*"([^"]+)"').Groups[1].Value)</ManifestGameVersion>
+
+    <OutputPath Condition="'$(ManifestGameVersion)' != ''">bin/$(Configuration)/bs$(ManifestGameVersion)/</OutputPath>
+
     <TargetFramework Condition="'$(TargetFramework)' == ''">net472</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
