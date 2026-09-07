@@ -38,14 +38,13 @@ namespace BeatAvatars
             Avatar avatar,
             LocalPlayerPoseProvider source,
             Transform space,
-            Vector3 containerOffset,
             float yaw,
             LocalAvatarVisualProvider visualProvider,
             BeatAvatarsConfig config)
         {
             var container = new GameObject("BeatAvatarsPreview");
             container.transform.SetParent(space, false);
-            Place(container.transform, containerOffset, yaw);
+            Place(container.transform, yaw);
             container.transform.localScale = new Vector3(1f, 1f, -1f);
 
             avatar.transform.SetParent(container.transform, false);
@@ -74,12 +73,9 @@ namespace BeatAvatars
             return new PreviewAvatar(container, avatar, reveal);
         }
 
-        internal void ApplyConfig(BeatAvatarsConfig config, float yaw)
+        internal void ApplyConfig(BeatAvatarsConfig config)
         {
             ApplyScales(_avatar, config);
-
-            if (_container != null)
-                Place(_container.transform, BeatAvatarsConfig.Offset.ToVector3(config.previewPosition), yaw);
         }
 
         /// <summary>
@@ -92,15 +88,26 @@ namespace BeatAvatars
         private const float kFacingAdjust = 15f;
 
         /// <summary>
-        /// Puts the mirror at the configured offset, swung round the player by <paramref name="yaw"/>.
+        /// Where the mirror CONTAINER sits relative to the player, in metres. The apparent mirror
+        /// surface is at HALF this distance: the container is negatively scaled in z, so a bone at
+        /// local z lands at (container.z - z), a reflection about z/2.
+        ///
+        /// A constant rather than a setting. There is no UI for it, and as config it was worse than
+        /// useless: a saved file pinned whatever default was current when it was written, so
+        /// changing the number here reached new installs only.
+        /// </summary>
+        private static readonly Vector3 kOffset = new Vector3(0f, 0f, 2.0f);
+
+        /// <summary>
+        /// Puts the mirror at <see cref="kOffset"/>, swung round the player by <paramref name="yaw"/>.
         ///
         /// The container is rotated as well as moved, so its local XY plane -- the plane the
         /// negative Z scale reflects across -- stays roughly square to the player. The offset keeps
         /// its meaning: z is how far away, x and y nudge it sideways and up within that frame.
         /// </summary>
-        private static void Place(Transform container, Vector3 offset, float yaw)
+        private static void Place(Transform container, float yaw)
         {
-            container.localPosition = Quaternion.Euler(0f, yaw, 0f) * offset;
+            container.localPosition = Quaternion.Euler(0f, yaw, 0f) * kOffset;
             container.localRotation = Quaternion.Euler(0f, yaw + kFacingAdjust, 0f);
         }
 
