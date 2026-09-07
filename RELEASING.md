@@ -87,8 +87,10 @@ LICENSE, byte for byte.
 | version | game | tag | release |
 |---|---|---|---|
 | 1.0.0 | 1.45.0 | `v1.0.0-bs1.45.0` on `BS_1.45.0` | removed, superseded |
-| 1.0.1 | 1.45.0 | `v1.0.1-bs1.45.0` on `BS_1.45.0` | latest |
+| 1.0.1 | 1.45.0 | `v1.0.1-bs1.45.0` on `BS_1.45.0` | |
 | 1.0.1 | 1.40.5 | `v1.0.1-bs1.40.5` on `BS_1.40.5` | |
+| 1.0.2 | 1.45.0 | `v1.0.2-bs1.45.0` on `BS_1.45.0` | latest |
+| 1.0.2 | 1.40.5 | `v1.0.2-bs1.40.5` on `BS_1.40.5` | |
 
 The 1.0.0 tag stays although its release is gone: a tag that others could have
 pulled is not reused or deleted, and it still records which commit shipped.
