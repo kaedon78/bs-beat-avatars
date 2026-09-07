@@ -151,7 +151,6 @@ also keeps it independent of the body, which `UpdateBodyPosition` derives from t
 | `handPositionOffset` | grip offset in the anchor's frame; `z` runs along the handle |
 | `handRotationOffset` | extra hand rotation in degrees, anchor frame |
 | `useControllerOffsets` | follow the saber anchor (true) or the raw controller pose |
-| `previewPosition` | mirror container offset; apparent mirror at half the `z` |
 
 ## Open work
 

@@ -32,7 +32,6 @@ namespace BeatAvatars
         private LocalPlayerPoseProvider _poseProvider;
         private BeatAvatarPartReveal _partReveal;
         private PreviewAvatar _preview;
-        private float _previewYaw;
         private bool _previewSpawning;
         private bool _previewWanted;
         private bool _spawning;
@@ -547,7 +546,7 @@ namespace BeatAvatars
                 _poseProvider.ResolveHands();
             }
 
-            _preview?.ApplyConfig(Config, _previewYaw);
+            _preview?.ApplyConfig(Config);
         }
 
         /// <summary>Spawns the tuning mirror. Idempotent.</summary>
@@ -588,11 +587,9 @@ namespace BeatAvatars
                     return;
                 }
 
-                _previewYaw = PreviewYaw(space, panel);
                 _preview = PreviewAvatar.Create(
                     avatar, _poseProvider, space,
-                    BeatAvatarsConfig.Offset.ToVector3(Config.previewPosition),
-                    _previewYaw, _visualProvider, Config);
+                    PreviewYaw(space, panel), _visualProvider, Config);
             }
             catch (Exception ex)
             {

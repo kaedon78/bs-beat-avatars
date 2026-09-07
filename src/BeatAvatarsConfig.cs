@@ -68,13 +68,6 @@ namespace BeatAvatars
         /// </summary>
         public Offset handRotationOffset = new Offset();
 
-        /// <summary>
-        /// Where the tuning preview's mirror CONTAINER sits, in player space, in metres. The
-        /// apparent mirror surface is at half this distance -- the container is negatively scaled
-        /// in z, so a bone at local z lands at (container.z - z), a reflection about z/2.
-        /// </summary>
-        public Offset previewPosition = new Offset { x = 0f, y = 0f, z = 2.0f };
-
         /// <summary>Plain x/y/z so the JSON stays readable; Vector3 serialises its derived properties too.</summary>
         internal sealed class Offset
         {
@@ -109,7 +102,6 @@ namespace BeatAvatars
                 useControllerOffsets = useControllerOffsets,
                 handPositionOffset = Offset.Copy(handPositionOffset),
                 handRotationOffset = Offset.Copy(handRotationOffset),
-                previewPosition = Offset.Copy(previewPosition),
             };
         }
 
